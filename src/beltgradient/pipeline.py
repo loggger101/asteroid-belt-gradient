@@ -38,7 +38,7 @@ FIGURE_FILES = {
 
 @dataclass
 class Results:
-    """Everything a run produces, for use from a notebook."""
+    """Everything a run produces: the summary plus the intermediate tables and samples."""
     summary: dict
     tables: dict[str, pd.DataFrame] = field(default_factory=dict)
     frames: dict[str, pd.DataFrame] = field(default_factory=dict)

@@ -1,6 +1,6 @@
 """Every figure in the paper. Each function returns the Figure; :mod:`beltgradient.pipeline` saves it.
 
-File names are historical (the notebook's order); the paper's numbering is:
+File names follow the analysis order, not the paper's; the paper's numbering is:
 fig5_circularity → Fig 1, fig1_c_fraction_vs_a → Fig 2, fig1b_stacked_composition → Fig 3,
 fig2_mass_by_zone → Fig 4, fig3_orbital_excitation → Fig 5, fig4_dark_fraction_albedo → Fig 6,
 fig0_completeness → Fig A1.

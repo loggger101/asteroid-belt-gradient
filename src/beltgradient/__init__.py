@@ -3,4 +3,4 @@
 Analysis code for Edwards (2026), "Mixed from the Start?". ``python -m beltgradient fetch`` downloads the
 inputs; ``python -m beltgradient run`` regenerates every figure and ``results/summary.json``.
 """
-__version__ = "1.2.1"
+__version__ = "1.3.0"

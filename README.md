@@ -83,7 +83,7 @@ Each is argued in the paper's Methods section. In short:
 Software this analysis is built on: NumPy (Harris et al. 2020, [doi:10.1038/s41586-020-2649-2](https://doi.org/10.1038/s41586-020-2649-2)), SciPy (Virtanen et al. 2020, [doi:10.1038/s41592-019-0686-2](https://doi.org/10.1038/s41592-019-0686-2)), pandas (McKinney 2010, [doi:10.25080/Majora-92bf1922-00a](https://doi.org/10.25080/Majora-92bf1922-00a)) and Matplotlib (Hunter 2007, [doi:10.1109/MCSE.2007.55](https://doi.org/10.1109/MCSE.2007.55)). The catalog merges JPL SBDB, SsODNet (Berthier et al. 2023), NEOWISE (Masiero et al. 2011) and MP3C (Observatoire de la Côte d'Azur); see the [AsteroidCatalog citations](https://github.com/loggger101/AsteroidCatalog/blob/main/CITATIONS.md).
 
 
-See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.2.1**. Earlier releases give the same figures and tables; v1.0.0 does not write the in-text numbers, v1.1.0 lacks the pre-main-sequence snow-line calculation, and v1.2.1 changes only documentation relative to v1.2.0.
+See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.3.0**. Earlier releases give the same figures and tables; they lack some of the in-text numbers (v1.0.0 has none, v1.1.0 lacks the pre-main-sequence snow line, v1.2.x lacks the measured-mass share).
 
 ## License
 

@@ -13,6 +13,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from . import __version__
 from .config import Paths
 
 SNAPSHOT_URL = "https://github.com/loggger101/asteroid-belt-gradient/releases/download/data-v1/catalog_snapshot.parquet"
@@ -35,7 +36,9 @@ def download(url: str, dest: Path, expected: str) -> None:
         return
     print(f"download  {url}")
     tmp = dest.with_suffix(dest.suffix + ".part")
-    with urllib.request.urlopen(url) as r, open(tmp, "wb") as f:
+    # the PDS archive refuses Python's default User-Agent
+    req = urllib.request.Request(url, headers={"User-Agent": f"beltgradient/{__version__}"})
+    with urllib.request.urlopen(req) as r, open(tmp, "wb") as f:
         shutil.copyfileobj(r, f)
     got = sha256(tmp)
     if got != expected:

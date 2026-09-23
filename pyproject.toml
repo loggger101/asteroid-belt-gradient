@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "beltgradient"
+dynamic = ["version"]
+description = "Is the asteroid belt's S/C compositional gradient primordial? Family-collapsed, completeness-debiased analysis of the main belt."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Logan Edwards" }]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "pyarrow>=12",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+notebook = ["jupyter", "nbconvert"]
+
+[project.scripts]
+belt-gradient = "beltgradient.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "beltgradient.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not slow'"
+markers = ["slow: full pipeline run against the committed results (needs data, ~3 min)"]

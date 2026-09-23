@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Inputs are fetched, not committed: `belt-gradient fetch` downloads and sha256-checks them.
+data/

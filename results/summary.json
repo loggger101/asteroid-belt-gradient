@@ -311,8 +311,49 @@
     "max_abs_change_zone_fraction": 0.02,
     "max_abs_change_a50_au": 0.0279
   },
+  "text_numbers": {
+    "assumed_label_fraction": 0.831,
+    "taxonomy_tier_family_fraction": 0.3221,
+    "families_with_main_belt_members": 242,
+    "families_classifiable": 197,
+    "vesta_family_members": 15252,
+    "n_collapsed_size_complete_all_groups": 492,
+    "completeness_H13.5_to_14.5_range": [
+      0.598,
+      0.752
+    ],
+    "H_of_10km_dark_body": 14.11,
+    "ipw_D10_bodies_dropped_by_bin_cuts": 1,
+    "H_limited_IPW_c_fraction_by_zone": {
+      "inner": 0.165,
+      "middle": 0.2461,
+      "pristine": 0.3638,
+      "outer": 0.6757
+    },
+    "innermost_c_fraction_ipw": {
+      "2.1-2.2": 0.0,
+      "2.2-2.3": 0.2172
+    },
+    "broad_minus_narrow_range": [
+      0.02,
+      0.1
+    ],
+    "dp_share_per_0.1AU_bin_from_2.9AU": [
+      0.121,
+      0.256
+    ],
+    "derived_diameter_fraction_taxonomy": 0.6173,
+    "mass_share_of_classified": {
+      "Ceres": 0.3842,
+      "Vesta": 0.106,
+      "Pallas": 0.084,
+      "Hygiea": 0.0336
+    },
+    "inner_mass_S_of_S_plus_C": 0.9371,
+    "inner_mass_S_of_all_classified": 0.8899
+  },
   "software": {
-    "beltgradient": "1.0.0",
+    "beltgradient": "1.1.0",
     "seed": 4045
   }
 }

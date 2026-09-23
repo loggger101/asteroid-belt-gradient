@@ -1,6 +1,6 @@
 # asteroid-belt-gradient
 
-Analysis code for **"Mixed from the Start? Testing Whether the Asteroid Belt's Compositional Gradient Is Primordial"** (L. Edwards, SPS 4045 Planet Formation term paper, Florida Institute of Technology, Fall 2026).
+Analysis code for L. Edwards (2026), **"Mixed from the Start? Testing Whether the Asteroid Belt's Compositional Gradient Is Primordial"** (Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology).
 
 If asteroids formed where they are today, the main belt should switch sharply from dry S-types to hydrated C-types at the nebular snow line near 2.7 AU. This package tests that against the 161,646 main-belt asteroids with a published taxonomy, after collapsing collisional families and correcting for the brightness bias that favors S-types. It regenerates every figure and every number in the paper from two public inputs.
 
@@ -83,7 +83,7 @@ Each is argued in the paper's Methods section. In short:
 Software this analysis is built on: NumPy (Harris et al. 2020, [doi:10.1038/s41586-020-2649-2](https://doi.org/10.1038/s41586-020-2649-2)), SciPy (Virtanen et al. 2020, [doi:10.1038/s41592-019-0686-2](https://doi.org/10.1038/s41592-019-0686-2)), pandas (McKinney 2010, [doi:10.25080/Majora-92bf1922-00a](https://doi.org/10.25080/Majora-92bf1922-00a)) and Matplotlib (Hunter 2007, [doi:10.1109/MCSE.2007.55](https://doi.org/10.1109/MCSE.2007.55)). The catalog merges JPL SBDB, SsODNet (Berthier et al. 2023), NEOWISE (Masiero et al. 2011) and MP3C (Observatoire de la Côte d'Azur); see the [AsteroidCatalog citations](https://github.com/loggger101/AsteroidCatalog/blob/main/CITATIONS.md).
 
 
-See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.2.0**. Earlier releases give the same figures and tables; v1.0.0 does not write the in-text numbers, and v1.1.0 lacks the pre-main-sequence snow-line calculation.
+See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.2.1**. Earlier releases give the same figures and tables; v1.0.0 does not write the in-text numbers, v1.1.0 lacks the pre-main-sequence snow-line calculation, and v1.2.1 changes only documentation relative to v1.2.0.
 
 ## License
 

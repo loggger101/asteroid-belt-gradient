@@ -89,6 +89,8 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "broad_minus_narrow_range": [round(float(gap.min().min()), 2), round(float(gap.max().max()), 2)],
         "dp_share_per_0.1AU_bin_from_2.9AU": [round(float(dp_outer.min()), 3), round(float(dp_outer.max()), 3)],
         "derived_diameter_fraction_taxonomy": round(float(tax.diameter_source.ne("measured").mean()), 4),
+        "n_classified_with_measured_mass": int(t_mass.mass_measured.astype(bool).sum()),
+        "measured_share_of_classified_mass": round(float(t_mass.estimated_mass_kg[t_mass.mass_measured.astype(bool)].sum() / t_mass.estimated_mass_kg.sum()), 4),
         "mass_share_of_classified": dict(zip(top4.name, (top4.estimated_mass_kg / t_mass.estimated_mass_kg.sum()).round(4))),
         "inner_mass_S_of_S_plus_C": round(float(mz.loc["inner", "S-like"] / (mz.loc["inner", "S-like"] + mz.loc["inner", "C-like"])), 4),
         "snow_line_au_on_bhac15_1msun_track": {age: round(SNOW_LINE_AU * 10 ** (logl / 2), 2) for age, logl in BHAC15_1MSUN_LOGL.items()},

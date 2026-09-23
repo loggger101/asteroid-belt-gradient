@@ -74,11 +74,14 @@ Each is argued in the paper's Methods section. In short:
 ## Data
 
 - **AsteroidCatalog snapshot** (`catalog_snapshot.parquet`, 85 MB). This is the 16 columns used here, taken from the [AsteroidCatalog](https://github.com/loggger101/AsteroidCatalog) build of 2026-08-11 (pipeline 1.1.0). It merges JPL SBDB, SsODNet ssoBFT, NEOWISE and MP3C. The snapshot is frozen because JPL adds bodies daily, so the build cannot be refetched identically. It is attached to the [`data-v1` release](https://github.com/loggger101/asteroid-belt-gradient/releases/tag/data-v1).
-- **Nesvorný HCM families and proper elements**: PDS Small Bodies Node bundle [`ast.nesvorny.families` V2.0](https://sbn.psi.edu/pds/resource/nesvornyfam.html). It holds 119 families from Nesvorný et al. (2015), 153 from Nesvorný, Roig, Vokrouhlický & Brož (2024, ApJS 274, 25), and synthetic proper elements for 1,249,051 orbits. It is fetched from the PDS archive.
+- **Nesvorný HCM families and proper elements**: PDS Small Bodies Node bundle [`ast.nesvorny.families` V2.0](https://sbn.psi.edu/pds/resource/nesvornyfam.html). Cite it as Nesvorný, D. (2024), *Nesvorný HCM asteroid families bundle* V2.0, NASA PDS, [doi:10.26033/5hyq-6k90](https://doi.org/10.26033/5hyq-6k90). It holds 119 families from Nesvorný et al. (2015), 153 from Nesvorný, Roig, Vokrouhlický & Brož (2024, ApJS 274, 25), and synthetic proper elements for 1,249,051 orbits. It is fetched from the PDS archive.
 
 `data/` is git-ignored. To keep the inputs elsewhere, set `BELT_GRADIENT_DATA`.
 
 ## Citation
+
+Software this analysis is built on: NumPy (Harris et al. 2020, [doi:10.1038/s41586-020-2649-2](https://doi.org/10.1038/s41586-020-2649-2)), SciPy (Virtanen et al. 2020, [doi:10.1038/s41592-019-0686-2](https://doi.org/10.1038/s41592-019-0686-2)), pandas (McKinney 2010, [doi:10.25080/Majora-92bf1922-00a](https://doi.org/10.25080/Majora-92bf1922-00a)) and Matplotlib (Hunter 2007, [doi:10.1109/MCSE.2007.55](https://doi.org/10.1109/MCSE.2007.55)). The catalog merges JPL SBDB, SsODNet (Berthier et al. 2023), NEOWISE (Masiero et al. 2011) and MP3C (Observatoire de la Côte d'Azur); see the [AsteroidCatalog citations](https://github.com/loggger101/AsteroidCatalog/blob/main/CITATIONS.md).
+
 
 See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.1.0**. v1.0.0 gives the same figures and tables but does not yet write the in-text numbers.
 

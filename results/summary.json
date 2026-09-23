@@ -350,10 +350,14 @@
       "Hygiea": 0.0336
     },
     "inner_mass_S_of_S_plus_C": 0.9371,
+    "snow_line_au_on_bhac15_1msun_track": {
+      "1.0 Myr": 3.71,
+      "5.1 Myr": 2.13
+    },
     "inner_mass_S_of_all_classified": 0.8899
   },
   "software": {
-    "beltgradient": "1.1.0",
+    "beltgradient": "1.2.0",
     "seed": 4045
   }
 }

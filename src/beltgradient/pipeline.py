@@ -17,7 +17,7 @@ from . import __version__
 from .albedo import with_measured_albedo
 from .catalog import load_catalog, main_belt
 from .completeness import add_h_bins, add_ipw_weights, complete_limit, completeness, diameter_limit
-from .config import A_MAX, A_MIN, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, ZONE_NAMES, Paths
+from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, ZONE_NAMES, Paths
 from .families import attach_families, extend_families, family_table, load_families, load_proper_elements
 from .figures import GROUP_ORDER, RCPARAMS
 from . import figures as F
@@ -91,6 +91,7 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "derived_diameter_fraction_taxonomy": round(float(tax.diameter_source.ne("measured").mean()), 4),
         "mass_share_of_classified": dict(zip(top4.name, (top4.estimated_mass_kg / t_mass.estimated_mass_kg.sum()).round(4))),
         "inner_mass_S_of_S_plus_C": round(float(mz.loc["inner", "S-like"] / (mz.loc["inner", "S-like"] + mz.loc["inner", "C-like"])), 4),
+        "snow_line_au_on_bhac15_1msun_track": {age: round(SNOW_LINE_AU * 10 ** (logl / 2), 2) for age, logl in BHAC15_1MSUN_LOGL.items()},
         "inner_mass_S_of_all_classified": round(float(mz.loc["inner", "S-like"] / mz.loc["inner"].sum()), 4),
     }
 

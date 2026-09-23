@@ -24,7 +24,7 @@ belt-gradient run     # ~3 min: rewrites figures/ and results/summary.json
 
 `python -m beltgradient ...` works the same without the console script. A run is deterministic (one RNG seeded with 4045): with the pinned inputs it reproduces the committed `summary.json` and figures bit for bit. `pytest` runs the fast tests; `pytest -m slow` also does a full run and checks it against the committed summary.
 
-[`notebooks/walkthrough.ipynb`](notebooks/walkthrough.ipynb) steps through the same analysis interactively, calling the package.
+`python examples/walkthrough.py` steps through the same analysis and prints the intermediate tables (families, completeness, zone fractions, crossover, orbit tests, robustness checks) without overwriting the committed outputs.
 
 ## Layout
 
@@ -43,7 +43,7 @@ src/beltgradient/
 figures/           committed outputs
 results/           summary.json: every number quoted in the paper
 tests/
-notebooks/
+examples/          walkthrough.py: the analysis stage by stage
 ```
 
 ### Paper figure ↔ file

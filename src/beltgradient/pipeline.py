@@ -17,11 +17,11 @@ from . import __version__
 from .albedo import with_measured_albedo
 from .catalog import load_catalog, main_belt
 from .completeness import add_h_bins, add_ipw_weights, complete_limit, completeness, diameter_limit
-from .config import A_MAX, A_MIN, D_IPW, EXTEND_FAMILIES, SEED, SNOW_LINE_AU, Paths
+from .config import A_MAX, A_MIN, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, ZONE_NAMES, Paths
 from .families import attach_families, extend_families, family_table, load_families, load_proper_elements
 from .figures import GROUP_ORDER, RCPARAMS
 from . import figures as F
-from .gradient import build_samples, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, zone_table
+from .gradient import DEN, NUM, build_samples, collapsed, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, zone_table
 from .orbits import orbit_sample, orbit_tests
 
 # name, bbox_inches for each output PNG
@@ -42,6 +42,57 @@ class Results:
     summary: dict
     tables: dict[str, pd.DataFrame] = field(default_factory=dict)
     frames: dict[str, pd.DataFrame] = field(default_factory=dict)
+
+
+def _weighted_c_fraction(s: pd.DataFrame, w: str, lo: float, hi: float, which: str = "narrow") -> float:
+    s = s[s.semi_major_axis_au.between(lo, hi, inclusive="right") & s.group.isin(DEN[which])]
+    return round(float((s[w] * s.group.isin(NUM[which])).sum() / s[w].sum()), 4) if len(s) else None
+
+
+def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> dict:
+    """Every number the paper quotes in running text that is not already a table entry."""
+    tax = mb[mb.tier.eq("taxonomy")]
+    point = lambda zt: zt.apply(lambda col: col.str.split(" ").str[0].astype(float))
+    gap = point(zt_broad) - point(zt_narrow)
+
+    # mass: shares of all classified mass, and S/(S+C) vs S/(all) in the inner belt
+    top4 = t_mass.nlargest(4, "estimated_mass_kg")
+    mz = mass_by_zone(t_mass, GROUP_ORDER)
+
+    # D/P share of the size-complete collapsed sample per 0.1 AU bin, from 2.9 AU outward (Fig. 3)
+    col = samples[keys[2]]
+    edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
+    st = (col[col.group.isin(GROUP_ORDER)].assign(bin=pd.cut(col.semi_major_axis_au, edges))
+          .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False).fillna(0))
+    dp = st["D/P"].div(st.sum(axis=1))
+    dp_outer = dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
+
+    # IPW on a brightness-limited sample (H < H_IPW_MAX, no size cut): the S-biased alternative §3.4 rejects
+    h_lim = collapsed(mb, ftab)
+    h_lim = h_lim[h_lim.tier.eq("taxonomy") & (h_lim.w_ipw > 0)]
+
+    comp_h14 = comp.loc[[iv for iv in comp.index if 13.5 <= iv.left < 14.5]]
+    ipw_pool = mb[mb.tier.eq("taxonomy") & (mb.diameter_km >= D_IPW)]
+    return {
+        "assumed_label_fraction": round(float(mb.tier.eq("assumed").mean()), 4),
+        "taxonomy_tier_family_fraction": round(float(tax.in_family.mean()), 4),
+        "families_with_main_belt_members": int(len(ftab)),
+        "families_classifiable": int(ftab.fam_group.notna().sum()),
+        "vesta_family_members": int(ftab.loc[ftab.fam_name.eq("Vesta"), "n_members"].iloc[0]),
+        "n_collapsed_size_complete_all_groups": int(len(samples[keys[2]])),
+        "completeness_H13.5_to_14.5_range": [round(float(comp_h14.min().min()), 3), round(float(comp_h14.max().max()), 3)],
+        "H_of_10km_dark_body": round(float(5 * np.log10(1329 / (D_IPW * np.sqrt(P_DARKEST)))), 2),
+        "ipw_D10_bodies_dropped_by_bin_cuts": int((ipw_pool.w_ipw == 0).sum()),
+        "H_limited_IPW_c_fraction_by_zone": {z: _weighted_c_fraction(h_lim[h_lim.zone == z], "w_ipw", A_MIN, A_MAX) for z in ZONE_NAMES},
+        "innermost_c_fraction_ipw": {"2.1-2.2": _weighted_c_fraction(samples[keys[1]], "w", 2.1, 2.2),
+                                     "2.2-2.3": _weighted_c_fraction(samples[keys[1]], "w", 2.2, 2.3)},
+        "broad_minus_narrow_range": [round(float(gap.min().min()), 2), round(float(gap.max().max()), 2)],
+        "dp_share_per_0.1AU_bin_from_2.9AU": [round(float(dp_outer.min()), 3), round(float(dp_outer.max()), 3)],
+        "derived_diameter_fraction_taxonomy": round(float(tax.diameter_source.ne("measured").mean()), 4),
+        "mass_share_of_classified": dict(zip(top4.name, (top4.estimated_mass_kg / t_mass.estimated_mass_kg.sum()).round(4))),
+        "inner_mass_S_of_S_plus_C": round(float(mz.loc["inner", "S-like"] / (mz.loc["inner", "S-like"] + mz.loc["inner", "C-like"])), 4),
+        "inner_mass_S_of_all_classified": round(float(mz.loc["inner", "S-like"] / mz.loc["inner"].sum()), 4),
+    }
 
 
 def _log(verbose, *a):
@@ -144,6 +195,9 @@ def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True)
     # 9d · the circularity trap
     save("circularity", F.circularity(mb[mb.tier.eq("assumed")].assign(w=1.0), samples["raw"], rng))
 
+    # 9e · numbers quoted in the paper's prose (point estimates only: no RNG, so nothing above moves)
+    text = text_numbers(mb, ftab, comp, samples, keys, t, zt_narrow, zt_broad)
+
     # 10 · summary numbers
     summary = {
         "catalog": {"rows": int(len(cat)), "catalog_date": str(cat.catalog_date.iloc[0]), "pipeline_version": str(cat.pipeline_version.iloc[0]),
@@ -165,6 +219,7 @@ def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True)
             "max_abs_change_zone_fraction": round(float(ext_dzone), 4),
             "max_abs_change_a50_au": round(float(ext_dxo), 4),
         },
+        "text_numbers": text,
         "software": {"beltgradient": __version__, "seed": SEED},
     }
     if write:

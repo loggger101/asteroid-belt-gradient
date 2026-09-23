@@ -58,7 +58,7 @@ examples/          walkthrough.py: the analysis stage by stage
 | Fig. 6 | `fig4_dark_fraction_albedo.png` | `figures.dark_fraction` |
 | Fig. A1 | `fig0_completeness.png` | `figures.completeness_plot` |
 
-Tables 2–5 come from `summary.json` keys `zone_c_fraction_*`, `inner_belt_by_size`, `crossover`, and `orbit_tests`; the family-extension robustness numbers in the limitations section are under `family_extension_toggled`.
+Tables 2–5 come from `summary.json` keys `zone_c_fraction_*`, `inner_belt_by_size`, `crossover`, and `orbit_tests`; the family-extension robustness numbers in the limitations section are under `family_extension_toggled`; every other number quoted in the running text (family and mass shares, completeness, the brightness-limited IPW comparison, and so on) is under `text_numbers`.
 
 ## Method choices
 
@@ -80,7 +80,7 @@ Each is argued in the paper's Methods section. In short:
 
 ## Citation
 
-See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.0.0**.
+See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.1.0**. v1.0.0 gives the same figures and tables but does not yet write the in-text numbers.
 
 ## License
 

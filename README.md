@@ -58,7 +58,7 @@ examples/          walkthrough.py: the analysis stage by stage
 | Fig. 6 | `fig4_dark_fraction_albedo.png` | `figures.dark_fraction` |
 | Fig. A1 | `fig0_completeness.png` | `figures.completeness_plot` |
 
-Tables 2–5 come from `summary.json` keys `zone_c_fraction_*`, `inner_belt_by_size`, `crossover`, and `orbit_tests`; the family-extension robustness numbers in the limitations section are under `family_extension_toggled`; every other number quoted in the running text (family and mass shares, completeness, the brightness-limited IPW comparison, and so on) is under `text_numbers`.
+Tables 2–5 come from `summary.json` keys `zone_c_fraction_*`, `inner_belt_by_size`, `crossover`, and `orbit_tests`; the family-extension robustness numbers in the limitations section are under `family_extension_toggled`; every other number quoted in the running text (family and mass shares, completeness, the brightness-limited IPW comparison, and so on) is under `text_numbers`. That includes the snow-line radii quoted in the paper's §2.2, which scale Equation (1) with the 1 M☉ pre-main-sequence luminosities of Baraffe et al. (2015, [doi:10.1051/0004-6361/201425481](https://doi.org/10.1051/0004-6361/201425481)), stored in `config.BHAC15_1MSUN_LOGL`.
 
 ## Method choices
 
@@ -83,7 +83,7 @@ Each is argued in the paper's Methods section. In short:
 Software this analysis is built on: NumPy (Harris et al. 2020, [doi:10.1038/s41586-020-2649-2](https://doi.org/10.1038/s41586-020-2649-2)), SciPy (Virtanen et al. 2020, [doi:10.1038/s41592-019-0686-2](https://doi.org/10.1038/s41592-019-0686-2)), pandas (McKinney 2010, [doi:10.25080/Majora-92bf1922-00a](https://doi.org/10.25080/Majora-92bf1922-00a)) and Matplotlib (Hunter 2007, [doi:10.1109/MCSE.2007.55](https://doi.org/10.1109/MCSE.2007.55)). The catalog merges JPL SBDB, SsODNet (Berthier et al. 2023), NEOWISE (Masiero et al. 2011) and MP3C (Observatoire de la Côte d'Azur); see the [AsteroidCatalog citations](https://github.com/loggger101/AsteroidCatalog/blob/main/CITATIONS.md).
 
 
-See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.1.0**. v1.0.0 gives the same figures and tables but does not yet write the in-text numbers.
+See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.2.0**. Earlier releases give the same figures and tables; v1.0.0 does not write the in-text numbers, and v1.1.0 lacks the pre-main-sequence snow-line calculation.
 
 ## License
 

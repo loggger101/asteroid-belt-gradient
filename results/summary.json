@@ -357,7 +357,7 @@
     "inner_mass_S_of_all_classified": 0.8899
   },
   "software": {
-    "beltgradient": "1.2.0",
+    "beltgradient": "1.2.1",
     "seed": 4045
   }
 }

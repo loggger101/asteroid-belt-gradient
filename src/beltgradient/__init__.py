@@ -4,4 +4,4 @@ Analysis code for Edwards (2026), "Constraints on the Origin of the Asteroid Bel
 from Debiased Taxonomic Data". ``python -m beltgradient fetch`` downloads the inputs;
 ``python -m beltgradient run`` regenerates every figure and ``results/summary.json``.
 """
-__version__ = "2.0.0"
+__version__ = "2.1.0"

@@ -1,16 +1,17 @@
 {
   "catalog": {
-    "rows": 1555667,
-    "catalog_date": "2026-08-11",
-    "pipeline_version": "1.1.0",
-    "main_belt": 1431660,
-    "taxonomy_tier": 161646
+    "release": "data-2026-09-26",
+    "rows": 1567657,
+    "catalog_date": "2026-09-26",
+    "pipeline_version": "1.4.1",
+    "main_belt": 1442600,
+    "taxonomy_tier": 161659
   },
   "families": {
     "n_families": 272,
     "members_matched_main_belt": 153271,
-    "family_fraction": 0.1071,
-    "extension_attaches": 229745,
+    "family_fraction": 0.1062,
+    "extension_attaches": 197421,
     "extension_used": false
   },
   "completeness": {
@@ -21,135 +22,135 @@
   },
   "zone_c_fraction_narrow": {
     "inner": {
-      "raw": "0.25 [0.24\u20130.25] (n=49690)",
-      "collapsed, IPW, D\u226510 km": "0.52 [0.49\u20130.55] (n=231)",
-      "collapsed, D\u226553 km": "0.41 [0.31\u20130.49] (n=39)",
+      "raw": "0.25 [0.24\u20130.25] (n=49691)",
+      "collapsed, IPW, D\u226510 km": "0.53 [0.50\u20130.56] (n=232)",
+      "collapsed, D\u226553 km": "0.39 [0.32\u20130.47] (n=38)",
       "background, D\u226553 km": "0.46 [0.35\u20130.56] (n=24)"
     },
     "middle": {
-      "raw": "0.35 [0.34\u20130.35] (n=48943)",
-      "collapsed, IPW, D\u226510 km": "0.63 [0.61\u20130.65] (n=661)",
-      "collapsed, D\u226553 km": "0.68 [0.64\u20130.73] (n=129)",
+      "raw": "0.35 [0.34\u20130.35] (n=48954)",
+      "collapsed, IPW, D\u226510 km": "0.63 [0.61\u20130.65] (n=658)",
+      "collapsed, D\u226553 km": "0.69 [0.65\u20130.73] (n=129)",
       "background, D\u226553 km": "0.71 [0.66\u20130.75] (n=96)"
     },
     "pristine": {
       "raw": "0.40 [0.39\u20130.40] (n=5155)",
-      "collapsed, IPW, D\u226510 km": "0.77 [0.73\u20130.81] (n=128)",
-      "collapsed, D\u226553 km": "0.70 [0.61\u20130.77] (n=30)",
-      "background, D\u226553 km": "0.71 [0.61\u20130.83] (n=21)"
+      "collapsed, IPW, D\u226510 km": "0.77 [0.73\u20130.80] (n=126)",
+      "collapsed, D\u226553 km": "0.70 [0.62\u20130.79] (n=30)",
+      "background, D\u226553 km": "0.71 [0.61\u20130.81] (n=21)"
     },
     "outer": {
       "raw": "0.70 [0.69\u20130.70] (n=31581)",
-      "collapsed, IPW, D\u226510 km": "0.90 [0.89\u20130.91] (n=1269)",
+      "collapsed, IPW, D\u226510 km": "0.90 [0.89\u20130.90] (n=1248)",
       "collapsed, D\u226553 km": "0.89 [0.87\u20130.92] (n=133)",
       "background, D\u226553 km": "0.91 [0.88\u20130.93] (n=106)"
     }
   },
   "zone_c_fraction_broad": {
     "inner": {
-      "raw": "0.29 [0.29\u20130.30] (n=53068)",
-      "collapsed, IPW, D\u226510 km": "0.57 [0.54\u20130.60] (n=258)",
-      "collapsed, D\u226553 km": "0.47 [0.38\u20130.53] (n=43)",
-      "background, D\u226553 km": "0.52 [0.42\u20130.61] (n=27)"
+      "raw": "0.29 [0.29\u20130.30] (n=53080)",
+      "collapsed, IPW, D\u226510 km": "0.58 [0.55\u20130.61] (n=262)",
+      "collapsed, D\u226553 km": "0.45 [0.36\u20130.53] (n=42)",
+      "background, D\u226553 km": "0.52 [0.41\u20130.61] (n=27)"
     },
     "middle": {
-      "raw": "0.41 [0.40\u20130.41] (n=53852)",
-      "collapsed, IPW, D\u226510 km": "0.68 [0.66\u20130.69] (n=751)",
-      "collapsed, D\u226553 km": "0.71 [0.67\u20130.75] (n=141)",
-      "background, D\u226553 km": "0.74 [0.69\u20130.78] (n=107)"
+      "raw": "0.41 [0.40\u20130.41] (n=53865)",
+      "collapsed, IPW, D\u226510 km": "0.68 [0.66\u20130.69] (n=746)",
+      "collapsed, D\u226553 km": "0.72 [0.68\u20130.76] (n=142)",
+      "background, D\u226553 km": "0.74 [0.70\u20130.78] (n=108)"
     },
     "pristine": {
-      "raw": "0.46 [0.45\u20130.46] (n=5743)",
-      "collapsed, IPW, D\u226510 km": "0.82 [0.80\u20130.85] (n=167)",
-      "collapsed, D\u226553 km": "0.78 [0.72\u20130.84] (n=40)",
-      "background, D\u226553 km": "0.81 [0.74\u20130.88] (n=31)"
+      "raw": "0.46 [0.45\u20130.46] (n=5746)",
+      "collapsed, IPW, D\u226510 km": "0.83 [0.80\u20130.85] (n=169)",
+      "collapsed, D\u226553 km": "0.78 [0.72\u20130.84] (n=41)",
+      "background, D\u226553 km": "0.81 [0.74\u20130.89] (n=32)"
     },
     "outer": {
-      "raw": "0.73 [0.73\u20130.73] (n=35198)",
-      "collapsed, IPW, D\u226510 km": "0.92 [0.91\u20130.93] (n=1622)",
-      "collapsed, D\u226553 km": "0.92 [0.89\u20130.94] (n=167)",
-      "background, D\u226553 km": "0.93 [0.90\u20130.95] (n=139)"
+      "raw": "0.73 [0.73\u20130.73] (n=35205)",
+      "collapsed, IPW, D\u226510 km": "0.92 [0.91\u20130.92] (n=1585)",
+      "collapsed, D\u226553 km": "0.92 [0.89\u20130.94] (n=169)",
+      "background, D\u226553 km": "0.93 [0.91\u20130.95] (n=141)"
     }
   },
   "mass_c_fraction": {
     "all": {
-      "inner": 0.063,
+      "inner": 0.062,
       "middle": 0.906,
-      "pristine": 0.715,
+      "pristine": 0.714,
       "outer": 0.939
     },
     "no_big4": {
-      "inner": 0.263,
-      "middle": 0.499,
-      "pristine": 0.715,
+      "inner": 0.261,
+      "middle": 0.496,
+      "pristine": 0.714,
       "outer": 0.923
     }
   },
   "inner_belt_by_size": [
     {
       "size": ">= 100 km",
-      "n_S": 10,
-      "n_C": 3,
-      "C_frac_number": 0.2308,
-      "C_frac_mass": 0.0389
+      "n_S": 9,
+      "n_C": 6,
+      "C_frac_number": 0.4,
+      "C_frac_mass": 0.0483
     },
     {
       "size": "50-100 km",
       "n_S": 16,
-      "n_C": 18,
-      "C_frac_number": 0.5294,
-      "C_frac_mass": 0.4596
+      "n_C": 14,
+      "C_frac_number": 0.4667,
+      "C_frac_mass": 0.2892
     },
     {
       "size": "20-50 km",
-      "n_S": 25,
-      "n_C": 37,
-      "C_frac_number": 0.5968,
-      "C_frac_mass": 0.3719
+      "n_S": 26,
+      "n_C": 39,
+      "C_frac_number": 0.6,
+      "C_frac_mass": 0.3918
     },
     {
       "size": "5-20 km",
-      "n_S": 1106,
-      "n_C": 1068,
-      "C_frac_number": 0.4913,
-      "C_frac_mass": 0.3402
+      "n_S": 1112,
+      "n_C": 1039,
+      "C_frac_number": 0.483,
+      "C_frac_mass": 0.3352
     }
   ],
   "crossover": {
     "raw": {
       "a50": 2.8407,
-      "a50_lo": 2.8382,
-      "a50_hi": 2.8442,
+      "a50_lo": 2.8378,
+      "a50_hi": 2.8431,
       "width_10_90": 1.7168,
-      "width_lo": 1.7052,
-      "width_hi": 1.7327,
-      "n": 135369.0
+      "width_lo": 1.7031,
+      "width_hi": 1.7306,
+      "n": 135381.0
     },
     "collapsed, IPW, D\u226510 km": {
-      "a50": 2.4629,
-      "a50_lo": 2.4298,
-      "a50_hi": 2.4849,
-      "width_10_90": 1.3786,
-      "width_lo": 1.3148,
-      "width_hi": 1.4724,
-      "n": 2289.0
+      "a50": 2.4603,
+      "a50_lo": 2.4338,
+      "a50_hi": 2.4852,
+      "width_10_90": 1.3937,
+      "width_lo": 1.3187,
+      "width_hi": 1.4785,
+      "n": 2264.0
     },
     "collapsed, D\u226553 km": {
-      "a50": 2.4721,
-      "a50_lo": 2.3925,
-      "a50_hi": 2.5165,
-      "width_10_90": 1.3915,
-      "width_lo": 1.2034,
-      "width_hi": 1.6841,
-      "n": 331.0
+      "a50": 2.4724,
+      "a50_lo": 2.3856,
+      "a50_hi": 2.5298,
+      "width_10_90": 1.3763,
+      "width_lo": 1.178,
+      "width_hi": 1.664,
+      "n": 330.0
     },
     "background, D\u226553 km": {
       "a50": 2.4068,
-      "a50_lo": 2.3078,
-      "a50_hi": 2.4819,
+      "a50_lo": 2.306,
+      "a50_hi": 2.4876,
       "width_10_90": 1.4859,
-      "width_lo": 1.2276,
-      "width_hi": 1.8476,
+      "width_lo": 1.2134,
+      "width_hi": 1.8334,
       "n": 247.0
     }
   },
@@ -159,28 +160,28 @@
       "zone": "inner",
       "element": "proper e",
       "n_S": 103,
-      "n_C": 103,
+      "n_C": 104,
       "median_S": 0.15553,
-      "median_C": 0.15416,
-      "dmedian_C_minus_S": -0.00138,
-      "ci95_lo": -0.01281,
-      "ci95_hi": 0.01588,
-      "KS_D": 0.1165,
-      "KS_p": 0.48868,
+      "median_C": 0.15502,
+      "dmedian_C_minus_S": -0.00052,
+      "ci95_lo": -0.01253,
+      "ci95_hi": 0.01711,
+      "KS_D": 0.11744,
+      "KS_p": 0.43643,
       "bonferroni_sig": false
     },
     {
       "zone": "inner",
       "element": "proper sin i",
       "n_S": 103,
-      "n_C": 103,
+      "n_C": 104,
       "median_S": 0.09831,
-      "median_C": 0.08519,
-      "dmedian_C_minus_S": -0.01312,
-      "ci95_lo": -0.03658,
-      "ci95_hi": 0.02381,
-      "KS_D": 0.14563,
-      "KS_p": 0.22543,
+      "median_C": 0.08518,
+      "dmedian_C_minus_S": -0.01313,
+      "ci95_lo": -0.03734,
+      "ci95_hi": 0.02331,
+      "KS_D": 0.15011,
+      "KS_p": 0.16772,
       "bonferroni_sig": false
     },
     {
@@ -191,8 +192,8 @@
       "median_S": 0.1499,
       "median_C": 0.15959,
       "dmedian_C_minus_S": 0.00969,
-      "ci95_lo": -0.00456,
-      "ci95_hi": 0.02911,
+      "ci95_lo": -0.00418,
+      "ci95_hi": 0.02893,
       "KS_D": 0.12017,
       "KS_p": 0.03045,
       "bonferroni_sig": false
@@ -205,8 +206,8 @@
       "median_S": 0.17039,
       "median_C": 0.14976,
       "dmedian_C_minus_S": -0.02063,
-      "ci95_lo": -0.03783,
-      "ci95_hi": -0.00454,
+      "ci95_lo": -0.03835,
+      "ci95_hi": -0.00447,
       "KS_D": 0.11684,
       "KS_p": 0.03817,
       "bonferroni_sig": false
@@ -219,8 +220,8 @@
       "median_S": 0.11328,
       "median_C": 0.17517,
       "dmedian_C_minus_S": 0.06189,
-      "ci95_lo": -0.00046,
-      "ci95_hi": 0.12194,
+      "ci95_lo": 0.00024,
+      "ci95_hi": 0.12234,
       "KS_D": 0.31818,
       "KS_p": 0.03778,
       "bonferroni_sig": false
@@ -233,8 +234,8 @@
       "median_S": 0.12506,
       "median_C": 0.21689,
       "dmedian_C_minus_S": 0.09183,
-      "ci95_lo": 0.00513,
-      "ci95_hi": 0.16927,
+      "ci95_lo": 0.00178,
+      "ci95_hi": 0.17224,
       "KS_D": 0.32576,
       "KS_p": 0.03109,
       "bonferroni_sig": false
@@ -243,79 +244,189 @@
       "zone": "outer",
       "element": "proper e",
       "n_S": 137,
-      "n_C": 1083,
+      "n_C": 1062,
       "median_S": 0.12147,
-      "median_C": 0.13461,
-      "dmedian_C_minus_S": 0.01314,
-      "ci95_lo": -0.00372,
-      "ci95_hi": 0.03635,
-      "KS_D": 0.12705,
-      "KS_p": 0.03574,
+      "median_C": 0.13551,
+      "dmedian_C_minus_S": 0.01404,
+      "ci95_lo": -0.00173,
+      "ci95_hi": 0.03358,
+      "KS_D": 0.12792,
+      "KS_p": 0.03419,
       "bonferroni_sig": false
     },
     {
       "zone": "outer",
       "element": "proper sin i",
       "n_S": 137,
-      "n_C": 1083,
+      "n_C": 1062,
       "median_S": 0.19935,
-      "median_C": 0.2005,
-      "dmedian_C_minus_S": 0.00115,
-      "ci95_lo": -0.01469,
-      "ci95_hi": 0.0191,
-      "KS_D": 0.15138,
-      "KS_p": 0.00668,
-      "bonferroni_sig": false
+      "median_C": 0.20144,
+      "dmedian_C_minus_S": 0.00208,
+      "ci95_lo": -0.0141,
+      "ci95_hi": 0.02011,
+      "KS_D": 0.153,
+      "KS_p": 0.00597,
+      "bonferroni_sig": true
     }
   ],
   "dark_fraction_complete": {
     "inner": 0.45,
     "middle": 0.6578,
     "pristine": 0.7887,
-    "outer": 0.8214
+    "outer": 0.8209
   },
   "family_extension_toggled": {
-    "family_fraction": 0.2675,
+    "family_fraction": 0.2431,
     "zone_c_fraction_narrow": {
       "inner": {
-        "raw": "0.25 [0.24\u20130.25] (n=49690)",
-        "collapsed, IPW, D\u226510 km": "0.53 [0.49\u20130.56] (n=211)",
-        "collapsed, D\u226553 km": "0.41 [0.33\u20130.48] (n=37)",
-        "background, D\u226553 km": "0.45 [0.34\u20130.55] (n=22)"
+        "raw": "0.25 [0.24\u20130.25] (n=49691)",
+        "collapsed, IPW, D\u226510 km": "0.53 [0.49\u20130.56] (n=218)",
+        "collapsed, D\u226553 km": "0.39 [0.32\u20130.48] (n=36)",
+        "background, D\u226553 km": "0.45 [0.35\u20130.57] (n=22)"
       },
       "middle": {
-        "raw": "0.35 [0.34\u20130.35] (n=48943)",
-        "collapsed, IPW, D\u226510 km": "0.63 [0.62\u20130.65] (n=613)",
-        "collapsed, D\u226553 km": "0.66 [0.61\u20130.70] (n=128)",
-        "background, D\u226553 km": "0.70 [0.65\u20130.75] (n=93)"
+        "raw": "0.35 [0.34\u20130.35] (n=48954)",
+        "collapsed, IPW, D\u226510 km": "0.63 [0.61\u20130.65] (n=628)",
+        "collapsed, D\u226553 km": "0.68 [0.64\u20130.72] (n=130)",
+        "background, D\u226553 km": "0.71 [0.66\u20130.76] (n=96)"
       },
       "pristine": {
         "raw": "0.40 [0.39\u20130.40] (n=5155)",
-        "collapsed, IPW, D\u226510 km": "0.78 [0.74\u20130.82] (n=119)",
+        "collapsed, IPW, D\u226510 km": "0.77 [0.74\u20130.81] (n=122)",
         "collapsed, D\u226553 km": "0.71 [0.62\u20130.79] (n=31)",
-        "background, D\u226553 km": "0.71 [0.60\u20130.81] (n=21)"
+        "background, D\u226553 km": "0.71 [0.62\u20130.81] (n=21)"
       },
       "outer": {
         "raw": "0.70 [0.69\u20130.70] (n=31581)",
-        "collapsed, IPW, D\u226510 km": "0.89 [0.88\u20130.90] (n=1134)",
-        "collapsed, D\u226553 km": "0.90 [0.88\u20130.93] (n=126)",
-        "background, D\u226553 km": "0.91 [0.88\u20130.94] (n=98)"
+        "collapsed, IPW, D\u226510 km": "0.90 [0.89\u20130.90] (n=1201)",
+        "collapsed, D\u226553 km": "0.90 [0.88\u20130.93] (n=131)",
+        "background, D\u226553 km": "0.90 [0.87\u20130.93] (n=105)"
       }
     },
     "crossover_a50": {
       "raw": 2.8407,
-      "collapsed, IPW, D\u226510 km": 2.4541,
-      "collapsed, D\u226553 km": 2.5,
-      "background, D\u226553 km": 2.4205
+      "collapsed, IPW, D\u226510 km": 2.4551,
+      "collapsed, D\u226553 km": 2.4876,
+      "background, D\u226553 km": 2.4081
     },
-    "max_abs_change_zone_fraction": 0.02,
-    "max_abs_change_a50_au": 0.0279
+    "max_abs_change_zone_fraction": 0.01,
+    "max_abs_change_a50_au": 0.0151,
+    "orbit_tests_ks": [
+      {
+        "zone": "inner",
+        "element": "proper e",
+        "n_S": 95,
+        "n_C": 98,
+        "KS_p": 0.35065,
+        "bonferroni_sig": false
+      },
+      {
+        "zone": "inner",
+        "element": "proper sin i",
+        "n_S": 95,
+        "n_C": 98,
+        "KS_p": 0.2616,
+        "bonferroni_sig": false
+      },
+      {
+        "zone": "middle",
+        "element": "proper e",
+        "n_S": 220,
+        "n_C": 338,
+        "KS_p": 0.06178,
+        "bonferroni_sig": false
+      },
+      {
+        "zone": "middle",
+        "element": "proper sin i",
+        "n_S": 220,
+        "n_C": 338,
+        "KS_p": 0.07002,
+        "bonferroni_sig": false
+      },
+      {
+        "zone": "pristine",
+        "element": "proper e",
+        "n_S": 22,
+        "n_C": 75,
+        "KS_p": 0.14231,
+        "bonferroni_sig": false
+      },
+      {
+        "zone": "pristine",
+        "element": "proper sin i",
+        "n_S": 22,
+        "n_C": 75,
+        "KS_p": 0.07063,
+        "bonferroni_sig": false
+      },
+      {
+        "zone": "outer",
+        "element": "proper e",
+        "n_S": 134,
+        "n_C": 1019,
+        "KS_p": 0.06753,
+        "bonferroni_sig": false
+      },
+      {
+        "zone": "outer",
+        "element": "proper sin i",
+        "n_S": 134,
+        "n_C": 1019,
+        "KS_p": 0.01124,
+        "bonferroni_sig": false
+      }
+    ]
   },
   "text_numbers": {
-    "assumed_label_fraction": 0.831,
+    "n_main_belt_by_label_tier": {
+      "assumed": 1200582,
+      "taxonomy": 161659,
+      "albedo_proxy": 80359
+    },
+    "assumed_tier_albedo_by_a": {
+      "0.057": {
+        "a_min": 3.27,
+        "a_max": 3.3,
+        "n": 506
+      },
+      "0.066": {
+        "a_min": 2.82,
+        "a_max": 3.27,
+        "n": 412810
+      },
+      "0.086": {
+        "a_min": 2.5,
+        "a_max": 2.82,
+        "n": 455832
+      },
+      "0.190": {
+        "a_min": 2.1,
+        "a_max": 2.5,
+        "n": 331411
+      }
+    },
+    "eos_family": {
+      "fam_group": "S-like",
+      "purity": 0.44,
+      "n_labelled": 3166
+    },
+    "flora_family_two_largest": [
+      {
+        "name": "Metis",
+        "spectral_type": "M",
+        "diameter_km": 170.7
+      },
+      {
+        "name": "Flora",
+        "spectral_type": "S",
+        "diameter_km": 144.8
+      }
+    ],
+    "assumed_label_fraction": 0.8322,
     "taxonomy_tier_family_fraction": 0.3221,
-    "families_with_main_belt_members": 242,
-    "families_classifiable": 197,
+    "families_with_main_belt_members": 240,
+    "families_classifiable": 193,
     "vesta_family_members": 15252,
     "n_collapsed_size_complete_all_groups": 492,
     "completeness_H13.5_to_14.5_range": [
@@ -325,41 +436,45 @@
     "H_of_10km_dark_body": 14.11,
     "ipw_D10_bodies_dropped_by_bin_cuts": 1,
     "H_limited_IPW_c_fraction_by_zone": {
-      "inner": 0.165,
+      "inner": 0.1652,
       "middle": 0.2461,
-      "pristine": 0.3638,
-      "outer": 0.6757
+      "pristine": 0.3627,
+      "outer": 0.6758
     },
     "innermost_c_fraction_ipw": {
       "2.1-2.2": 0.0,
       "2.2-2.3": 0.2172
+    },
+    "innermost_n_S_plus_C_size_complete_2.1-2.3": {
+      "collapsed, D\u226553 km": 5,
+      "background, D\u226553 km": 4
     },
     "broad_minus_narrow_range": [
       0.02,
       0.1
     ],
     "dp_share_per_0.1AU_bin_from_2.9AU": [
-      0.121,
-      0.256
+      0.135,
+      0.25
     ],
-    "derived_diameter_fraction_taxonomy": 0.6173,
-    "n_classified_with_measured_mass": 373,
-    "measured_share_of_classified_mass": 0.9418,
+    "derived_diameter_fraction_taxonomy": 0.6171,
+    "n_classified_with_measured_mass": 370,
+    "measured_share_of_classified_mass": 0.9401,
     "mass_share_of_classified": {
-      "Ceres": 0.3842,
-      "Vesta": 0.106,
-      "Pallas": 0.084,
-      "Hygiea": 0.0336
+      "Ceres": 0.3853,
+      "Vesta": 0.1063,
+      "Pallas": 0.0843,
+      "Hygiea": 0.0337
     },
-    "inner_mass_S_of_S_plus_C": 0.9371,
+    "inner_mass_S_of_S_plus_C": 0.9378,
     "snow_line_au_on_bhac15_1msun_track": {
       "1.0 Myr": 3.71,
       "5.1 Myr": 2.13
     },
-    "inner_mass_S_of_all_classified": 0.8899
+    "inner_mass_S_of_all_classified": 0.891
   },
   "software": {
-    "beltgradient": "1.3.0",
+    "beltgradient": "2.0.0",
     "seed": 4045
   }
 }

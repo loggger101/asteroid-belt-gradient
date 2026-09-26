@@ -81,6 +81,8 @@ def main():
     print(f"family fraction {S['families']['family_fraction']:.3f} -> {ext['family_fraction']:.3f}")
     print(f"max change in a zone fraction: {ext['max_abs_change_zone_fraction']}, in a50: {ext['max_abs_change_a50_au']} AU\n")
     print(T["zone_narrow_extended"].to_string())
+    print("\norbit test on the extended background (KS only):")
+    print(T["orbit_ks_extended"].round(4).to_string())
 
 
 if __name__ == "__main__":

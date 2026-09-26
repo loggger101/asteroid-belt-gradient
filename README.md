@@ -2,13 +2,13 @@
 
 Analysis code for L. Edwards (2026), **"Mixed from the Start? Testing Whether the Asteroid Belt's Compositional Gradient Is Primordial"** (Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology).
 
-If asteroids formed where they are today, the main belt should switch sharply from dry S-types to hydrated C-types at the nebular snow line near 2.7 AU. This package tests that against the 161,646 main-belt asteroids with a published taxonomy, after collapsing collisional families and correcting for the brightness bias that favors S-types. It regenerates every figure and every number in the paper from two public inputs.
+If asteroids formed where they are today, the main belt should switch sharply from dry S-types to hydrated C-types at the nebular snow line near 2.7 AU. This package tests that against the 161,659 main-belt asteroids with a published taxonomy in the AsteroidCatalog release `data-2026-09-26`, after collapsing collisional families and correcting for the brightness bias that favors S-types. It regenerates every figure and every number in the paper from two public inputs.
 
 | | inner (2.1–2.5 AU) | middle | pristine | outer (–3.3 AU) |
 |---|---|---|---|---|
 | C/(S+C), raw count | 0.25 | 0.35 | 0.40 | 0.70 |
-| C/(S+C), families collapsed, IPW, D ≥ 10 km | 0.52 | 0.63 | 0.77 | 0.90 |
-| C/(S+C), families collapsed, D ≥ 53 km | 0.41 | 0.68 | 0.70 | 0.89 |
+| C/(S+C), families collapsed, IPW, D ≥ 10 km | 0.53 | 0.63 | 0.77 | 0.90 |
+| C/(S+C), families collapsed, D ≥ 53 km | 0.39 | 0.69 | 0.70 | 0.89 |
 
 S/C crossover: 2.84 AU raw, 2.41–2.47 AU once corrected; the 10→90% transition is 1.4–1.5 AU wide, wider than the belt. Full numbers with bootstrap intervals are in [`results/summary.json`](results/summary.json).
 
@@ -18,7 +18,7 @@ S/C crossover: 2.84 AU raw, 2.41–2.47 AU once corrected; the 10→90% transiti
 git clone https://github.com/loggger101/asteroid-belt-gradient
 cd asteroid-belt-gradient
 pip install -e .
-belt-gradient fetch   # ~150 MB: catalog snapshot + Nesvorný families, sha256-checked
+belt-gradient fetch   # ~280 MB: AsteroidCatalog release + Nesvorný families, sha256-checked
 belt-gradient run     # ~3 min: rewrites figures/ and results/summary.json
 ```
 
@@ -31,7 +31,7 @@ belt-gradient run     # ~3 min: rewrites figures/ and results/summary.json
 ```
 src/beltgradient/
   config.py        every knob: belt limits, zones, completeness threshold, size cuts, seed
-  catalog.py       load the snapshot, select the main belt, group classes, label tiers
+  catalog.py       load the catalog release, select the main belt, group classes, label tiers
   families.py      Nesvorný families, proper elements, one-step extension, family collapse
   completeness.py  label completeness vs H, size-complete limit, IPW weights
   gradient.py      C-fraction curves and zone tables, logistic crossover, inner belt by size and mass
@@ -58,22 +58,22 @@ examples/          walkthrough.py: the analysis stage by stage
 | Fig. 6 | `fig4_dark_fraction_albedo.png` | `figures.dark_fraction` |
 | Fig. A1 | `fig0_completeness.png` | `figures.completeness_plot` |
 
-Tables 2–5 come from `summary.json` keys `zone_c_fraction_*`, `inner_belt_by_size`, `crossover`, and `orbit_tests`; the family-extension robustness numbers in the limitations section are under `family_extension_toggled`; every other number quoted in the running text (family and mass shares, completeness, the brightness-limited IPW comparison, and so on) is under `text_numbers`. That includes the snow-line radii quoted in the paper's §2.2, which scale Equation (1) with the 1 M☉ pre-main-sequence luminosities of Baraffe et al. (2015, [doi:10.1051/0004-6361/201425481](https://doi.org/10.1051/0004-6361/201425481)), stored in `config.BHAC15_1MSUN_LOGL`.
+Tables 2–5 come from `summary.json` keys `zone_c_fraction_*`, `inner_belt_by_size`, `crossover`, and `orbit_tests`; the family-extension robustness numbers (zone fractions, crossover, and the orbit test repeated on the extended background) are under `family_extension_toggled`; every other number quoted in the running text (family and mass shares, completeness, the brightness-limited IPW comparison, and so on) is under `text_numbers`. That includes the snow-line radii quoted in the paper's §2.2, which scale Equation (1) with the 1 M☉ pre-main-sequence luminosities of Baraffe et al. (2015, [doi:10.1051/0004-6361/201425481](https://doi.org/10.1051/0004-6361/201425481)), stored in `config.BHAC15_1MSUN_LOGL`.
 
 ## Method choices
 
 Each is argued in the paper's Methods section. In short:
 
 1. **Only published taxonomy counts** (`spectral_type_source == "source"`). 83% of the catalog's labels come from an albedo *assumed by semimajor axis* and then thresholded. Using them would return the gradient by construction (Fig. 1).
-2. **Groups by first letter.** S-like = S, Q, A, V, R, O; C-like = C, B; D/P = D, P, T; K/L kept separate; X excluded. The fractions are narrow, C/(S+C), and broad, (C+D/P+K/L)/(all but X).
-3. **Families are collapsed, not deleted.** Each family becomes one body with the majority class of ≥ 3 labelled members (otherwise the largest member's label), D from the summed D³, and the largest member's orbit.
+2. **Groups by first letter.** S-like = S, Q, A, V, R, O; C-like = C, B, F; D/P = D, P, T, Z (Z is Mahlke et al.'s 2022 extremely red class); K/L kept separate; X (X, M, E) excluded. The fractions are narrow, C/(S+C), and broad, (C+D/P+K/L)/(all but X).
+3. **Families are collapsed, not deleted.** Each family becomes one body with the most common class of ≥ 3 labelled members, X-types not voting (with fewer labels, or a tie, the largest member's label), D from the summed D³, and the largest member's orbit. A body in two families goes to the larger; identical lists in the PDS bundle (529 Vibilia's file repeats 528 Leonidas's members; the 2024 lists of 1998 HD130 and 2001 PG20 are the same) count once.
 4. **Samples are limited by size, not brightness.** Two methods: size-complete (H_c = 10.5, so D ≥ 52.8 km for p = 0.04) and inverse-completeness weighting at D ≥ 10 km.
-5. **One-step family extension is off.** When it is turned on (`EXTEND_FAMILIES`), it attaches 229,745 more bodies, yet no zone fraction changes by more than 0.02 and the crossover moves by less than 0.03 AU.
-6. **The orbit test is KS only**, Bonferroni over 8 tests (p < 0.00625). Nothing passes.
+5. **One-step family extension is off.** When it is turned on (`EXTEND_FAMILIES`), it attaches 197,421 more bodies (nearest listed member within the family's cutoff, by the HCM distance exactly as the bundle's `hcluster.c` computes it), yet no zone fraction changes by more than 0.01 and the crossover moves by less than 0.02 AU.
+6. **The orbit test is KS only**, Bonferroni over 8 tests (p < 0.00625). One test passes, outer-belt sin i (p = 0.006), from an excess of C-types at the Themis family's inclination and of S-like bodies at Eos's. With the family extension on, none passes (smallest p = 0.011), so it is read as family halos, not as a class-dependent excitation.
 
 ## Data
 
-- **AsteroidCatalog snapshot** (`catalog_snapshot.parquet`, 85 MB). This is the 16 columns used here, taken from the [AsteroidCatalog](https://github.com/loggger101/AsteroidCatalog) build of 2026-08-11 (pipeline 1.1.0). It merges JPL SBDB, SsODNet ssoBFT, NEOWISE and MP3C. The snapshot is frozen because JPL adds bodies daily, so the build cannot be refetched identically. It is attached to the [`data-v1` release](https://github.com/loggger101/asteroid-belt-gradient/releases/tag/data-v1).
+- **AsteroidCatalog release [`data-2026-09-26`](https://github.com/loggger101/AsteroidCatalog/releases/tag/data-2026-09-26)** (`asteroid_catalog.parquet`, 216 MB; 1,567,657 bodies, data contract 1.4.1). It merges JPL SBDB, SsODNet ssoBFT, NEOWISE and MP3C. JPL adds bodies daily, so a build cannot be repeated; each release is one frozen build, never rebuilt under its tag, and `fetch` checks the sha256 its manifest lists. The analysis reads 17 of its columns (`catalog.COLS`). The tag is set in `config.CATALOG_RELEASE`.
 - **Nesvorný HCM families and proper elements**: PDS Small Bodies Node bundle [`ast.nesvorny.families` V2.0](https://sbn.psi.edu/pds/resource/nesvornyfam.html). Cite it as Nesvorný, D. (2024), *Nesvorný HCM asteroid families bundle* V2.0, NASA PDS, [doi:10.26033/5hyq-6k90](https://doi.org/10.26033/5hyq-6k90). It holds 119 families from Nesvorný et al. (2015), 153 from Nesvorný, Roig, Vokrouhlický & Brož (2024, ApJS 274, 25), and synthetic proper elements for 1,249,051 orbits. It is fetched from the PDS archive.
 
 `data/` is git-ignored. To keep the inputs elsewhere, set `BELT_GRADIENT_DATA`.
@@ -83,7 +83,7 @@ Each is argued in the paper's Methods section. In short:
 Software this analysis is built on: NumPy (Harris et al. 2020, [doi:10.1038/s41586-020-2649-2](https://doi.org/10.1038/s41586-020-2649-2)), SciPy (Virtanen et al. 2020, [doi:10.1038/s41592-019-0686-2](https://doi.org/10.1038/s41592-019-0686-2)), pandas (McKinney 2010, [doi:10.25080/Majora-92bf1922-00a](https://doi.org/10.25080/Majora-92bf1922-00a)) and Matplotlib (Hunter 2007, [doi:10.1109/MCSE.2007.55](https://doi.org/10.1109/MCSE.2007.55)). The catalog merges JPL SBDB, SsODNet (Berthier et al. 2023), NEOWISE (Masiero et al. 2011) and MP3C (Observatoire de la Côte d'Azur); see the [AsteroidCatalog citations](https://github.com/loggger101/AsteroidCatalog/blob/main/CITATIONS.md).
 
 
-See [`CITATION.cff`](CITATION.cff). The paper cites release **v1.3.0**. Earlier releases give the same figures and tables; they lack some of the in-text numbers (v1.0.0 has none, v1.1.0 lacks the pre-main-sequence snow line, v1.2.x lacks the measured-mass share).
+See [`CITATION.cff`](CITATION.cff). The paper cites release **v2.0.0**, the first on the AsteroidCatalog release `data-2026-09-26`. The v1.x releases analysed the catalog's 2026-08-11 build (pipeline 1.1.0, frozen as this repository's [`data-v1`](https://github.com/loggger101/asteroid-belt-gradient/releases/tag/data-v1) snapshot), so their numbers differ slightly. v2.0.0 also groups classes F and Z, which v1.x left out of every fraction.
 
 ## License
 

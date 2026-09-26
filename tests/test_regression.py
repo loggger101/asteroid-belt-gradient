@@ -12,7 +12,7 @@ from beltgradient.config import Paths
 @pytest.mark.slow
 def test_full_run_reproduces_committed_summary():
     paths = Paths.default()
-    if not (paths.snapshot.exists() and (paths.nesvorny / "data").exists()):
+    if not (paths.catalog.exists() and (paths.nesvorny / "data").exists()):
         pytest.skip("inputs not present; run `belt-gradient fetch`")
     import matplotlib
     matplotlib.use("Agg")

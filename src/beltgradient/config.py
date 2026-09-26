@@ -31,6 +31,11 @@ H_EDGES        = np.arange(3, 19.5, 0.5)
 
 COLORS = {"S-like": "#c0392b", "C-like": "#2c3e50", "D/P": "#7d5a3c", "K/L": "#d68910", "X": "#8e8e8e", "other": "#cccccc"}
 
+# ── inputs ──────────────────────────────────────────────────────────────────
+# The AsteroidCatalog build analysed here: a frozen, checksummed GitHub release (data contract 1.4.1).
+# JPL adds bodies daily, so a result must name its build; releases are never rebuilt under a tag.
+CATALOG_RELEASE = "data-2026-09-26"
+
 
 @dataclass(frozen=True)
 class Paths:
@@ -58,9 +63,9 @@ class Paths:
         return self.root / "results"
 
     @property
-    def snapshot(self) -> Path:
-        # frozen copy of the AsteroidCatalog build: the upstream build cannot be refetched identically
-        return self.data / "catalog_snapshot.parquet"
+    def catalog(self) -> Path:
+        # named by release tag, so a file from another build is never read by mistake
+        return self.data / f"asteroid_catalog_{CATALOG_RELEASE}.parquet"
 
     @property
     def nesvorny(self) -> Path:

@@ -17,12 +17,12 @@ from . import __version__
 from .albedo import with_measured_albedo
 from .catalog import load_catalog, main_belt
 from .completeness import add_h_bins, add_ipw_weights, complete_limit, completeness, diameter_limit
-from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, ZONE_NAMES, Paths
+from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, CATALOG_RELEASE, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, ZONE_NAMES, Paths
 from .families import attach_families, extend_families, family_table, load_families, load_proper_elements
 from .figures import GROUP_ORDER, RCPARAMS
 from . import figures as F
 from .gradient import DEN, NUM, build_samples, collapsed, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, zone_table
-from .orbits import orbit_sample, orbit_tests
+from .orbits import ks_only, orbit_sample, orbit_tests
 
 # name, bbox_inches for each output PNG
 FIGURE_FILES = {
@@ -73,7 +73,20 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
 
     comp_h14 = comp.loc[[iv for iv in comp.index if 13.5 <= iv.left < 14.5]]
     ipw_pool = mb[mb.tier.eq("taxonomy") & (mb.diameter_km >= D_IPW)]
+
+    # the albedo the catalog assumed for each assumed-tier label, and the range of a it covers (Fig. 1)
+    asm = mb[mb.tier.eq("assumed")].groupby("albedo_assumed_for_diameter").semi_major_axis_au.agg(["min", "max", "size"])
+    # families the Limitations section names
+    fam = lambda name: ftab.index[ftab.fam_name.eq(name)][0]
+    eos = ftab.loc[fam("Eos")]
+    flora_top2 = mb[mb.fam_id.eq(fam("Flora"))].nlargest(2, "diameter_km")
     return {
+        "n_main_belt_by_label_tier": {k: int(v) for k, v in mb.tier.value_counts().items()},
+        "assumed_tier_albedo_by_a": {f"{p:.3f}": {"a_min": round(float(r["min"]), 3), "a_max": round(float(r["max"]), 3), "n": int(r["size"])}
+                                     for p, r in asm.iterrows()},
+        "eos_family": {"fam_group": eos.fam_group, "purity": round(float(eos.purity), 2), "n_labelled": int(eos.n_labelled)},
+        "flora_family_two_largest": [{"name": r["name"], "spectral_type": r.spectral_type, "diameter_km": round(float(r.diameter_km), 1)}
+                                     for _, r in flora_top2.iterrows()],
         "assumed_label_fraction": round(float(mb.tier.eq("assumed").mean()), 4),
         "taxonomy_tier_family_fraction": round(float(tax.in_family.mean()), 4),
         "families_with_main_belt_members": int(len(ftab)),
@@ -86,6 +99,8 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "H_limited_IPW_c_fraction_by_zone": {z: _weighted_c_fraction(h_lim[h_lim.zone == z], "w_ipw", A_MIN, A_MAX) for z in ZONE_NAMES},
         "innermost_c_fraction_ipw": {"2.1-2.2": _weighted_c_fraction(samples[keys[1]], "w", 2.1, 2.2),
                                      "2.2-2.3": _weighted_c_fraction(samples[keys[1]], "w", 2.2, 2.3)},
+        "innermost_n_S_plus_C_size_complete_2.1-2.3": {k: int((samples[k].semi_major_axis_au.between(2.1, 2.3, inclusive="right")
+                                                              & samples[k].group.isin(["S-like", "C-like"])).sum()) for k in keys[2:]},
         "broad_minus_narrow_range": [round(float(gap.min().min()), 2), round(float(gap.max().max()), 2)],
         "dp_share_per_0.1AU_bin_from_2.9AU": [round(float(dp_outer.min()), 3), round(float(dp_outer.max()), 3)],
         "derived_diameter_fraction_taxonomy": round(float(tax.diameter_source.ne("measured").mean()), 4),
@@ -120,8 +135,8 @@ def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True)
         plt.close(fig)
 
     # 1–2 · catalog, main belt, compositional groups
-    cat = load_catalog(paths.snapshot)
-    _log(verbose, f"snapshot: {len(cat):,} rows | catalog_date {cat.catalog_date.iloc[0]} | pipeline {cat.pipeline_version.iloc[0]}")
+    cat = load_catalog(paths.catalog)
+    _log(verbose, f"catalog {CATALOG_RELEASE}: {len(cat):,} rows | catalog_date {cat.catalog_date.iloc[0]} | pipeline {cat.pipeline_version.iloc[0]}")
     mb = main_belt(cat)
     _log(verbose, f"main belt ({A_MIN}-{A_MAX} AU): {len(mb):,} | taxonomy tier {mb.tier.eq('taxonomy').sum():,}")
 
@@ -194,6 +209,8 @@ def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True)
     point = lambda zt: zt.apply(lambda col: col.str.split(" ").str[0].astype(float))
     ext_dzone = (point(zt_alt) - point(zt_base_again)).abs().to_numpy().max()
     ext_dxo = (xo_alt.a50.astype(float) - xo.a50.astype(float)).abs().max()
+    # the orbit test on the other background: halo members attached to a family leave it (KS only, no rng)
+    ks_alt = ks_only(orbit_sample(alt))
 
     # 9d · the circularity trap
     save("circularity", F.circularity(mb[mb.tier.eq("assumed")].assign(w=1.0), samples["raw"], rng))
@@ -203,7 +220,7 @@ def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True)
 
     # 10 · summary numbers
     summary = {
-        "catalog": {"rows": int(len(cat)), "catalog_date": str(cat.catalog_date.iloc[0]), "pipeline_version": str(cat.pipeline_version.iloc[0]),
+        "catalog": {"release": CATALOG_RELEASE, "rows": int(len(cat)), "catalog_date": str(cat.catalog_date.iloc[0]), "pipeline_version": str(cat.pipeline_version.iloc[0]),
                     "main_belt": int(len(mb)), "taxonomy_tier": int(mb.tier.eq("taxonomy").sum())},
         "families": {"n_families": int(len(fams)), "members_matched_main_belt": int(mb.in_family.sum()),
                      "family_fraction": round(float(mb.in_family.mean()), 4), "extension_attaches": n_added, "extension_used": EXTEND_FAMILIES},
@@ -221,18 +238,20 @@ def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True)
             "crossover_a50": xo_alt.a50.astype(float).round(4).to_dict(),
             "max_abs_change_zone_fraction": round(float(ext_dzone), 4),
             "max_abs_change_a50_au": round(float(ext_dxo), 4),
+            "orbit_tests_ks": ks_alt.round(5).to_dict(orient="records"),
         },
         "text_numbers": text,
         "software": {"beltgradient": __version__, "seed": SEED},
     }
     if write:
-        (paths.results / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
+        # "\n" on every platform, so a run reproduces the committed file byte for byte
+        (paths.results / "summary.json").write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8", newline="\n")
         _log(verbose, f"wrote {paths.results / 'summary.json'} and {len(FIGURE_FILES)} figures to {paths.figures}")
 
     return Results(
         summary=summary,
         tables={"families": ftab, "completeness": comp, "zone_narrow": zt_narrow, "zone_broad": zt_broad,
                 "inner_by_size": size_tab, "crossover": xo, "orbit_tests": otests, "dark_zone": dark_zone,
-                "zone_narrow_extended": zt_alt, "crossover_extended": xo_alt},
+                "zone_narrow_extended": zt_alt, "crossover_extended": xo_alt, "orbit_ks_extended": ks_alt},
         frames={"main_belt": mb, "orbit_sample": orb, **{f"sample: {k}": v for k, v in samples.items()}},
     )

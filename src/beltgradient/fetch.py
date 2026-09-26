@@ -1,8 +1,8 @@
 """Download and verify the two inputs.
 
-* ``catalog_snapshot.parquet``: the columns of the AsteroidCatalog build of 2026-08-11 (pipeline
-  1.1.0) used here, frozen because JPL adds bodies daily and the build cannot be refetched
-  identically. Attached to this repository's ``data-v1`` release.
+* The AsteroidCatalog release ``CATALOG_RELEASE`` (``data-2026-09-26``: 1,567,657 bodies, data
+  contract 1.4.1). A release is one frozen build that is never rebuilt under its tag; the sha256
+  below is the one its ``manifest.json`` lists for ``asteroid_catalog.parquet``.
 * ``ast.nesvorny.families_V2_0``: Nesvorný HCM families and proper elements, PDS Small Bodies Node.
 """
 from __future__ import annotations
@@ -14,10 +14,10 @@ import zipfile
 from pathlib import Path
 
 from . import __version__
-from .config import Paths
+from .config import CATALOG_RELEASE, Paths
 
-SNAPSHOT_URL = "https://github.com/loggger101/asteroid-belt-gradient/releases/download/data-v1/catalog_snapshot.parquet"
-SNAPSHOT_SHA256 = "f5ac7e68f6db758dba8e786092d7f7967d83b14b93d97473665f739c4e36d498"
+CATALOG_URL = f"https://github.com/loggger101/AsteroidCatalog/releases/download/{CATALOG_RELEASE}/asteroid_catalog.parquet"
+CATALOG_SHA256 = "1b923a41b8eda45c7823f17d87e2c88473c2f1c1931c0c9417235fa73c59a33d"
 NESVORNY_URL = "https://sbnarchive.psi.edu/pds4/non_mission/ast.nesvorny.families_V2_0.zip"
 NESVORNY_SHA256 = "4adf5a341eaea3f1fb209ccb4c875188f224a65b5f260d1d99e10be28f1b3145"
 
@@ -50,7 +50,7 @@ def download(url: str, dest: Path, expected: str) -> None:
 def fetch(paths: Paths | None = None, keep_zip: bool = False) -> None:
     paths = paths or Paths.default()
     paths.data.mkdir(parents=True, exist_ok=True)
-    download(SNAPSHOT_URL, paths.snapshot, SNAPSHOT_SHA256)
+    download(CATALOG_URL, paths.catalog, CATALOG_SHA256)
     if (paths.nesvorny / "data" / "proper_catalog24.tab").exists():
         print(f"ok        {paths.nesvorny.name}/")
         return

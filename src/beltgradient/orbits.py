@@ -35,6 +35,19 @@ def split_by_class(orb: pd.DataFrame, zone: str, col: str) -> tuple[np.ndarray, 
     return oz.loc[oz.group == "S-like", col].values, oz.loc[oz.group == "C-like", col].values
 
 
+def ks_only(orb: pd.DataFrame, alpha: float = 0.05) -> pd.DataFrame:
+    """KS p-value per zone and element, as in :func:`orbit_tests` but with no bootstrap (no random draws)."""
+    rows = []
+    for z in ZONE_NAMES:
+        for col, lab in ELEMENTS:
+            S, C = split_by_class(orb, z, col)
+            if len(S) >= 10 and len(C) >= 10:
+                rows.append(dict(zone=z, element=lab, n_S=len(S), n_C=len(C), KS_p=stats.ks_2samp(S, C).pvalue))
+    out = pd.DataFrame(rows)
+    out["bonferroni_sig"] = out.KS_p < alpha / len(out)
+    return out
+
+
 def orbit_tests(orb: pd.DataFrame, rng: np.random.Generator, alpha: float = 0.05) -> pd.DataFrame:
     """KS test and C-minus-S median difference per zone and element (needs >= 10 of each class)."""
     rows = []

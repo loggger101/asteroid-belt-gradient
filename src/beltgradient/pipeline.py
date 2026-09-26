@@ -50,7 +50,10 @@ def _weighted_c_fraction(s: pd.DataFrame, w: str, lo: float, hi: float, which: s
 
 
 def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> dict:
-    """Every number the paper quotes in running text that is not already a table entry."""
+    """Every data-derived number the paper quotes in running text that is not already a table entry.
+
+    Literature values the paper quotes (with a citation) are not recomputed here.
+    """
     tax = mb[mb.tier.eq("taxonomy")]
     point = lambda zt: zt.apply(lambda col: col.str.split(" ").str[0].astype(float))
     gap = point(zt_broad) - point(zt_narrow)

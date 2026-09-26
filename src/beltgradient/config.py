@@ -11,9 +11,9 @@ import numpy as np
 A_MIN, A_MAX   = 2.1, 3.3          # main belt, AU
 Q_MIN          = 1.3               # perihelion floor: drop Mars-crossers
 ZONES          = [2.1, 2.5, 2.82, 2.96, 3.3]            # inner | middle | pristine | outer (Kirkwood gaps)
-ZONE_NAMES     = ["inner", "middle", "pristine", "outer"]
+ZONE_NAMES     = ["inner", "middle", "pristine", "outer"]  # "pristine" zone: Brož et al. (2013, A&A 551, A117)
 KIRKWOOD       = {"3:1": 2.502, "5:2": 2.825, "7:3": 2.958, "2:1": 3.278}
-SNOW_LINE_AU   = (278 / 170) ** 2  # T_eq = 278 K (a/1 AU)^-1/2 = 170 K  -> 2.67 AU
+SNOW_LINE_AU   = (278 / 170) ** 2  # T_eq = 278 K (a/1 AU)^-1/2 = 170 K  -> 2.67 AU (Hayashi 1981)
 # log L/L_sun on the 1.0 M_sun pre-main-sequence track of Baraffe et al. (2015, A&A 577, A42; BHAC15 table),
 # rows log t = 6.001799 and 6.703958. The snow line scales as L^1/2 at fixed temperature.
 BHAC15_1MSUN_LOGL = {"1.0 Myr": 0.285, "5.1 Myr": -0.198}

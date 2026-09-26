@@ -3,10 +3,12 @@
 Implanted C-types need not share the excitation of locally formed S-types; formation in place
 predicts no class dependence within a zone. Background bodies only (family members share
 near-identical proper elements), taxonomy tier, D >= D_ORBIT. Two-sample KS per zone and element,
-Bonferroni over all tests. Scipy's Anderson–Darling p-values are capped to [0.001, 0.25], so KS only.
+Bonferroni over all tests. SciPy's tabulated Anderson–Darling p-values are capped to [0.001, 0.25]
+(uncapped ones need its permutation method, SciPy >= 1.11, and a resampling budget), so KS only.
 
-Resonances and Yarkovsky drift reshape e and i after formation: a difference is suggestive, and
-its absence does not rule out implantation.
+Resonances and Yarkovsky drift (Bottke et al. 2006) reshape e and i after formation, as does the
+giant-planet instability (in the Grand Tack, e relaxes toward today's distribution; Deienno et al.
+2016): a difference is suggestive, and its absence does not rule out implantation.
 """
 from __future__ import annotations
 

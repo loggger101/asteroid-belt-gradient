@@ -35,14 +35,15 @@ def main():
     T, S = res.tables, res.summary
 
     section("Label provenance",
-            "Only `taxonomy` (published classifications) is used. `assumed` labels come from an albedo chosen\n"
-            "by semimajor axis, so they would return the gradient by construction.")
+            "Only `taxonomy` (published classifications, mostly SkyMapper and SDSS colours) is used. `assumed`\n"
+            "labels come from an albedo chosen by semimajor axis, so they would return the gradient by construction.")
     print(res.frames["main_belt"].tier.value_counts().to_string())
     figure("circularity")
 
     section("Collisional families",
-            "Each family collapses to one body: majority class of >= 3 labelled members, else the largest\n"
-            "member's label. `purity` = fraction of labelled members in that class.")
+            "Each family collapses to one body: the most common class of >= 3 labelled members, X-types not\n"
+            "voting; with fewer labels, or a tie, the largest member's label. `purity` = fraction of labelled\n"
+            "members in that class.")
     cols = ["fam_name", "n_members", "D_equiv_km", "a_rep", "fam_group", "purity", "n_labelled", "largest"]
     print(T["families"].head(15)[cols].round(3).to_string())
 

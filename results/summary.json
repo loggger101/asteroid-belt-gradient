@@ -1,10 +1,10 @@
 {
   "catalog": {
-    "release": "data-2026-09-26",
-    "rows": 1567657,
+    "release": "data-2026-09-26b",
+    "rows": 1567859,
     "catalog_date": "2026-09-26",
-    "pipeline_version": "1.4.1",
-    "main_belt": 1442600,
+    "pipeline_version": "1.5.0",
+    "main_belt": 1442785,
     "taxonomy_tier": 161659
   },
   "families": {
@@ -380,7 +380,7 @@
   },
   "text_numbers": {
     "n_main_belt_by_label_tier": {
-      "assumed": 1200582,
+      "assumed": 1200767,
       "taxonomy": 161659,
       "albedo_proxy": 80359
     },
@@ -393,17 +393,17 @@
       "0.066": {
         "a_min": 2.82,
         "a_max": 3.27,
-        "n": 412810
+        "n": 412886
       },
       "0.086": {
         "a_min": 2.5,
         "a_max": 2.82,
-        "n": 455832
+        "n": 455904
       },
       "0.190": {
         "a_min": 2.1,
         "a_max": 2.5,
-        "n": 331411
+        "n": 331448
       }
     },
     "eos_family": {
@@ -423,7 +423,7 @@
         "diameter_km": 144.8
       }
     ],
-    "assumed_label_fraction": 0.8322,
+    "assumed_label_fraction": 0.8323,
     "taxonomy_tier_family_fraction": 0.3221,
     "families_with_main_belt_members": 240,
     "families_classifiable": 193,
@@ -459,11 +459,11 @@
     ],
     "derived_diameter_fraction_taxonomy": 0.6171,
     "n_classified_with_measured_mass": 370,
-    "measured_share_of_classified_mass": 0.9401,
+    "measured_share_of_classified_mass": 0.9397,
     "mass_share_of_classified": {
-      "Ceres": 0.3853,
+      "Ceres": 0.3851,
       "Vesta": 0.1063,
-      "Pallas": 0.0843,
+      "Pallas": 0.0842,
       "Hygiea": 0.0337
     },
     "inner_mass_S_of_S_plus_C": 0.9378,
@@ -471,10 +471,10 @@
       "1.0 Myr": 3.71,
       "5.1 Myr": 2.13
     },
-    "inner_mass_S_of_all_classified": 0.891
+    "inner_mass_S_of_all_classified": 0.8908
   },
   "software": {
-    "beltgradient": "2.0.0",
+    "beltgradient": "2.1.0",
     "seed": 4045
   }
 }

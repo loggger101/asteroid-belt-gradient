@@ -16,3 +16,79 @@ keywords:
   - snow line
   - asteroid taxonomy
   - collisional families
+references:
+  - type: data
+    title: "AsteroidCatalog"
+    authors:
+      - family-names: Edwards
+        given-names: Logan M.
+    version: "data-2026-09-26"
+    repository-code: "https://github.com/loggger101/AsteroidCatalog"
+    url: "https://github.com/loggger101/AsteroidCatalog/releases/tag/data-2026-09-26"
+    notes: "The catalog release this analysis reads (data contract 1.4.1)."
+  - type: data
+    title: "Nesvorný HCM asteroid families bundle"
+    authors:
+      - family-names: Nesvorný
+        given-names: David
+    version: "2.0"
+    year: 2024
+    doi: 10.26033/5hyq-6k90
+    publisher:
+      name: "NASA Planetary Data System"
+  - type: article
+    title: "Catalog of proper orbits for 1.25 million main-belt asteroids and discovery of 136 new collisional families"
+    authors:
+      - family-names: Nesvorný
+        given-names: David
+      - family-names: Roig
+        given-names: Fernando
+      - family-names: Vokrouhlický
+        given-names: David
+      - family-names: Brož
+        given-names: Miroslav
+    journal: "The Astrophysical Journal Supplement Series"
+    volume: 274
+    start: 25
+    year: 2024
+    doi: 10.3847/1538-4365/ad675c
+  - type: article
+    title: "SsODNet: Solar system Open Database Network"
+    authors:
+      - family-names: Berthier
+        given-names: J.
+      - family-names: Carry
+        given-names: B.
+      - family-names: Mahlke
+        given-names: M.
+      - family-names: Normand
+        given-names: J.
+    journal: "Astronomy & Astrophysics"
+    volume: 671
+    start: A151
+    year: 2023
+    doi: 10.1051/0004-6361/202244878
+  - type: data
+    title: "NEOWISE Diameters and Albedos V2.0"
+    authors:
+      - family-names: Mainzer
+        given-names: Amy
+      - family-names: Bauer
+        given-names: James
+      - family-names: Cutri
+        given-names: Roc
+      - family-names: Grav
+        given-names: Tommy
+      - family-names: Kramer
+        given-names: Emily
+      - family-names: Masiero
+        given-names: Joseph
+      - family-names: Sonnett
+        given-names: Sarah
+      - family-names: Wright
+        given-names: Edward
+    version: "2.0"
+    year: 2019
+    doi: 10.26033/18S3-2Z54
+    publisher:
+      name: "NASA Planetary Data System"

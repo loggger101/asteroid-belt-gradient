@@ -2,7 +2,8 @@
 
 Membership comes from the PDS SBN bundle ``ast.nesvorny.families`` V2.0: 119 families from
 Nesvorný et al. (2015, numbered asteroids only) plus 153 from Nesvorný, Roig, Vokrouhlický &
-Brož (2024). Proper elements come from the same bundle (``proper_catalog24.tab``, 1.25 M orbits).
+Brož (2024). Proper elements (orbits with the planets' periodic perturbations removed; Knežević &
+Milani 2003) come from the same bundle (``proper_catalog24.tab``, 1.25 M orbits).
 
 Counting fragments measures which bodies happened to break, not what formed where, so each
 family is collapsed to one body (:func:`family_table`) before any fraction is computed.
@@ -98,7 +99,7 @@ K_CANDIDATES = 16                                   # nearest neighbours in the 
 
 
 def zappala_distance(a1, e1, s1, a2, e2, s2):
-    """HCM distance of Zappalà et al. (1990, 1994) in m/s, as the bundle's ``hcluster.c`` computes it:
+    """HCM distance of Zappalà et al. (1990) in m/s, as the bundle's ``hcluster.c`` computes it:
     d = na sqrt(5/4 (da/a)^2 + 2 (de)^2 + 2 (d sin i)^2), with na and a taken at the pair's mean a."""
     am = (a1 + a2) / 2
     return V1AU / np.sqrt(am) * np.sqrt(1.25 * ((a1 - a2) / am) ** 2 + 2 * (e1 - e2) ** 2 + 2 * (s1 - s2) ** 2)
@@ -118,8 +119,10 @@ def extend_families(df: pd.DataFrame, fams: pd.DataFrame, chunk: int = 100_000) 
     """One-step nearest-member extension, no chaining.
 
     A background body joins the family of its nearest listed member (by :func:`zappala_distance`)
-    if that distance is below the family's cutoff. The cutoffs were tuned on a catalogue ~3x
-    sparser, so this over-attaches: treat it as an upper bound on family contamination.
+    if that distance is below the family's cutoff, a simple version of attaching members to family
+    cores (Milani et al. 2014). The 2015 cutoffs were tuned on 384,337 numbered asteroids (Nesvorný
+    et al. 2015), ~3x sparser than the proper-element catalogue used here, so this over-attaches:
+    treat it as an upper bound on family contamination.
     """
     cut = fams.set_index("fam_id").cutoff
     has_p = df.a_p.notna()

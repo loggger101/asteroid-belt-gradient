@@ -4,10 +4,14 @@ At fixed H a dark C-type is larger than a bright S-type, so a sample cut in H ov
 S-types among small bodies. Two remedies:
 
 1. **Size-complete sample.** H_c is the faintest H bin where >= 95% of bodies in every zone are
-   labelled. Since H = 5 log10(1329 / (D sqrt(p))), every body with
+   labelled. Since H = 5 log10(1329 / (D sqrt(p))) (Pravec & Harris 2007), every body with
    D >= D_c = 1329 p_dark^-1/2 10^(-H_c/5) is then labelled whatever its albedo.
-2. **Inverse-completeness weighting (IPW)** on a size-limited sample: weight 1/c(H, zone), keep
-   D >= 10 km. Assumes that at fixed H and zone, labelling does not depend on class.
+2. **Inverse-completeness weighting (IPW)** on a size-limited sample: weight 1/c(H, zone)
+   (Horvitz & Thompson 1952), keep D >= 10 km. Assumes that at fixed H and zone, labelling does
+   not depend on class.
+
+Both lean on catalogue H, which for small asteroids was found to run 0.4–0.5 mag too bright near
+H = 14 (Pravec et al. 2012): that shifts the H bins and the H-derived diameters alike.
 """
 from __future__ import annotations
 

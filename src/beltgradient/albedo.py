@@ -1,7 +1,13 @@
 """Label-free check: the dark fraction (measured p_V < 0.10) versus semimajor axis.
 
-Uses only measured geometric albedo (NEOWISE/JPL), no taxonomy. Completeness of measured
-albedos is computed the same way as for taxonomy labels.
+Uses only measured geometric albedo, no taxonomy. Almost every main-belt body with a measured
+albedo also has a NEOWISE fit in the catalog (Mainzer et al. 2019 data set; Masiero et al. 2011 and
+the later NEOWISE papers); the value used is the catalog's precedence pick, mostly JPL SBDB's.
+Completeness of measured albedos is computed the same way as for taxonomy labels.
+
+The dark/bright split at p_V = 0.10 follows the albedos of classified asteroids: C-, B-, D- and
+T-types are all dark and the S complex is bright, the two overlapping at small sizes (Mainzer et al.
+2011, ApJ 741, 90).
 """
 from __future__ import annotations
 

@@ -6,7 +6,7 @@ The catalog assigns a spectral type to almost every body, by different routes
 =================  ===========================================================  =====================
 tier               route                                                        used?
 =================  ===========================================================  =====================
-``source``         published taxonomy (SsODNet: SDSS/Gaia/spectroscopic surveys)  yes, primary
+``source``         published taxonomy (SsODNet; mostly SkyMapper/SDSS colours)  yes, primary
 ``albedo``         *measured* albedo thresholded: p<0.10 C, else S                no (the label-free
                                                                                 check reads measured
                                                                                 albedos directly)
@@ -15,6 +15,12 @@ tier               route                                                        
 
 (``tholen`` and ``orbit``, the catalog's other two routes, label no main-belt body in the
 release analysed here; ``orbit`` is D for untyped bodies from the Trojans outward.)
+
+Most ``source`` labels are multi-filter colours from SkyMapper (Sergeyev et al. 2022) and SDSS
+(Carvano et al. 2010; DeMeo & Carry 2013; Sergeyev & Carry 2021), with some near-infrared colours
+(Popescu et al. 2018). Where JPL has a spectral class (Bus & Binzel 2002), the catalog uses it; SsODNet
+otherwise gives Mahlke et al. (2022) classes for bodies with spectra. SsODNet asks that these source
+papers be cited alongside Berthier et al. (2023).
 """
 from __future__ import annotations
 
@@ -28,10 +34,11 @@ COLS = ["designation", "name", "spectral_type", "spectral_type_source", "semi_ma
         "inclination_deg", "perihelion_au", "diameter_km", "diameter_source", "albedo", "absolute_magnitude_h",
         "estimated_mass_kg", "mass_measured", "albedo_assumed_for_diameter", "catalog_date", "pipeline_version"]
 
-# First letter of the Bus–DeMeo / Mahlke / Tholen class. K/L are anhydrous but CV/CO-linked, so kept
-# apart; X is excluded from the S/C fraction (without albedo it spans enstatite, metal and P-like
-# bodies). Z, Mahlke et al.'s (2022) class of extremely red objects, is counted with D/P; F, one of
-# Tholen's (1984) minor classes, as C-like.
+# First letter of the Bus–DeMeo (DeMeo et al. 2009) / Mahlke / Tholen class. K/L are anhydrous but
+# CV/CO-linked (Sunshine et al. 2008; Clark et al. 2009), so kept apart; X is excluded from the S/C
+# fraction (without albedo it spans enstatite, metal and P-like bodies; DeMeo & Carry 2013). Z, Mahlke
+# et al.'s (2022) class of extremely red objects, is counted with D/P; F, one of Tholen's (1984) minor
+# classes, as C-like.
 GROUP_OF_LETTER = {**dict.fromkeys(list("SQAVRO"), "S-like"), **dict.fromkeys(list("CBF"), "C-like"),
                    **dict.fromkeys(list("DPTZ"), "D/P"), **dict.fromkeys(list("KL"), "K/L"),
                    **dict.fromkeys(list("XME"), "X")}

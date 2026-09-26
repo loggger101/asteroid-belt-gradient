@@ -11,8 +11,8 @@ collapsed, D>=D_c                 each family -> one body      size-complete
 background, D>=D_c                removed                      size-complete
 ================================  ===========================  =====================
 
-Uncertainties are Poisson-bootstrap 16–84% intervals. All randomness comes from the ``rng``
-argument, so a run is reproducible given the seed and the call order.
+Uncertainties are Poisson-bootstrap 16–84% intervals (Efron 1979; Hanley & MacGibbon 2006). All
+randomness comes from the ``rng`` argument, so a run is reproducible given the seed and the call order.
 """
 from __future__ import annotations
 

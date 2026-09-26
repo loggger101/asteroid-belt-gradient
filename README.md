@@ -1,6 +1,6 @@
 # asteroid-belt-gradient
 
-Analysis code for L. Edwards (2026), **"The Asteroid Belt's Compositional Gradient Favors Implantation over Condensation in Place"** (Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology).
+Analysis code for L. Edwards (2026), **"Constraints on the Origin of the Asteroid Belt's Compositional Gradient from Debiased Taxonomic Data"** (Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology).
 
 If asteroids formed where they are today, the main belt should switch sharply from dry S-types to hydrated C-types at the nebular snow line near 2.7 AU. This package tests that against the 161,659 main-belt asteroids with a published taxonomy in the AsteroidCatalog release `data-2026-09-26`, after collapsing collisional families and correcting for the brightness bias that favors S-types. It regenerates every figure and every data-derived number in the paper from two public inputs.
 

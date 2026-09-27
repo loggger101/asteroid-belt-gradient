@@ -96,8 +96,11 @@ def mass_bars(panels: list[tuple[str, pd.DataFrame]]):
         for i, z in enumerate(ZONE_NAMES):
             ax.text(1.01, i, f"{mz.loc[z].sum():.1e} kg", va="center", fontsize=7.5)
         ax.set(title=lab, xlim=(0, 1.18), xlabel="mass fraction")
-    axes[0].invert_yaxis(); axes[1].legend(fontsize=7.5, loc="lower right")
+    axes[0].invert_yaxis()
     fig.suptitle("Mass-weighted composition by zone", y=1.02); fig.tight_layout()
+    # one legend under both panels, clear of the bars and of the per-zone totals
+    fig.legend(*axes[1].get_legend_handles_labels(), loc="upper center", bbox_to_anchor=(0.5, 0), ncol=len(GROUP_ORDER),
+               fontsize=7.5, frameon=False)
     return fig
 
 

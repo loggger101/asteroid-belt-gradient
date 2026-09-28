@@ -5,6 +5,8 @@
 Runs the same pipeline as ``belt-gradient run`` without overwriting figures/ or results/,
 then prints each stage. Inputs come from ``belt-gradient fetch``.
 """
+import sys
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -30,6 +32,7 @@ def figure(key):
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")        # the tables print "≥" and "─", which cp1252 cannot encode
     paths = Paths.default()
     res = run(paths, write=False)
     T, S = res.tables, res.summary

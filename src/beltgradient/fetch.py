@@ -20,6 +20,7 @@ CATALOG_URL = f"https://github.com/loggger101/AsteroidCatalog/releases/download/
 CATALOG_SHA256 = "6adcc57afe045834b964c91fbc698635bbdafca6084390c4d6e3eef2664f9bc8"
 NESVORNY_URL = "https://sbnarchive.psi.edu/pds4/non_mission/ast.nesvorny.families_V2_0.zip"
 NESVORNY_SHA256 = "4adf5a341eaea3f1fb209ccb4c875188f224a65b5f260d1d99e10be28f1b3145"
+TIMEOUT_S = 60
 
 
 def sha256(path: Path) -> str:
@@ -36,9 +37,10 @@ def download(url: str, dest: Path, expected: str) -> None:
         return
     print(f"download  {url}")
     tmp = dest.with_suffix(dest.suffix + ".part")
-    # the PDS archive refuses Python's default User-Agent
+    # the PDS archive refuses Python's default User-Agent. The timeout is per socket operation: a
+    # stalled connection raises instead of hanging, however long the whole download takes.
     req = urllib.request.Request(url, headers={"User-Agent": f"beltgradient/{__version__}"})
-    with urllib.request.urlopen(req) as r, open(tmp, "wb") as f:
+    with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r, open(tmp, "wb") as f:
         shutil.copyfileobj(r, f)
     got = sha256(tmp)
     if got != expected:

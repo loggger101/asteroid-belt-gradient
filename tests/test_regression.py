@@ -1,4 +1,4 @@
-"""Full run against the committed results. Needs the data (``belt-gradient fetch``), takes ~3 min.
+"""Full run against the committed results. Needs the data (``belt-gradient fetch``), takes ~1.5 min.
 
 Run with ``pytest -m slow``.
 """

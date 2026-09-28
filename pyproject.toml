@@ -33,4 +33,4 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-m 'not slow'"
-markers = ["slow: full pipeline run against the committed results (needs data, ~3 min)"]
+markers = ["slow: full pipeline run against the committed results (needs data, ~1.5 min)"]

@@ -19,10 +19,10 @@ git clone https://github.com/loggger101/asteroid-belt-gradient
 cd asteroid-belt-gradient
 pip install -e .
 belt-gradient fetch   # ~280 MB: AsteroidCatalog release + Nesvorný families, sha256-checked
-belt-gradient run     # ~3 min: rewrites figures/ and results/summary.json
+belt-gradient run     # ~1.5 min: rewrites figures/ and results/summary.json
 ```
 
-`python -m beltgradient ...` works the same without the console script. A run is deterministic (one RNG seeded with 4045): with the pinned inputs it reproduces the committed `summary.json` bit for bit, and the figures too under Matplotlib 3.11.1, the version that drew them (each PNG records it). `pytest` runs the fast tests (about 15 s), which include a full run of the pipeline and the CLI on small synthetic inputs whose true crossover is known; `pytest -m slow` also does the full run on the real inputs and checks it against the committed summary. CI runs the fast tests on Linux and Windows, and the full run on every pull request, every push to main and weekly (`.github/workflows/reproduce.yml`), so a dependency release that moves a published number shows up.
+`python -m beltgradient ...` works the same without the console script. A run is deterministic (one RNG seeded with 4045): with the pinned inputs it reproduces the committed `summary.json` bit for bit, and the figures too under Matplotlib 3.11.1, the version that drew them (each PNG records it). `pytest` runs the fast tests (about 15 s), which include a full run of the pipeline and the CLI on small synthetic inputs whose true crossover is known; `pytest -m slow` also does the full run on the real inputs and checks it against the committed summary. CI runs the fast tests on Linux and Windows, and the full run on every pull request and push to main (`.github/workflows/reproduce.yml`), so a dependency release that moves a published number shows up at the next change.
 
 `python examples/walkthrough.py` steps through the same analysis and prints the intermediate tables (families, completeness, zone fractions, crossover, orbit tests, robustness checks) without overwriting the committed outputs.
 

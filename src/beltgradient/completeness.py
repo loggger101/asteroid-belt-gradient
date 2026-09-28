@@ -33,11 +33,14 @@ def completeness(mb: pd.DataFrame, labelled: pd.Series) -> tuple[pd.DataFrame, p
 
 
 def complete_limit(comp: pd.DataFrame, n: pd.DataFrame) -> float:
-    """Faintest H edge such that every populated (H, zone) cell brighter than it is >= COMPLETE_FRAC labelled."""
+    """Faintest H edge such that every populated (H, zone) cell brighter than it is >= COMPLETE_FRAC labelled.
+
+    If every populated cell is, that is the last edge.
+    """
     ok = ((comp >= COMPLETE_FRAC) | (n == 0)).all(axis=1) & (n.sum(axis=1) > 0)
     populated = n.sum(axis=1).values > 0
     bad = np.where(populated & ~ok.values)[0]
-    return float(H_EDGES[bad[0]])
+    return float(H_EDGES[bad[0]] if len(bad) else H_EDGES[-1])
 
 
 def diameter_limit(h_c: float, p_dark: float = P_DARKEST) -> float:

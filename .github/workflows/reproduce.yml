@@ -1,0 +1,40 @@
+name: reproduce
+
+# The full run on the real inputs against the committed results/summary.json (`pytest -m slow`), plus the
+# fast tests. `belt-gradient fetch` downloads the AsteroidCatalog release and the Nesvorný bundle (~280 MB,
+# sha256-checked); they are cached under a key that changes whenever fetch.py's URLs or checksums do.
+# Weekly as well, so a NumPy, SciPy or pandas release that moves a published number shows up.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: Cache the inputs
+        uses: actions/cache@v4
+        with:
+          path: data
+          key: inputs-${{ hashFiles('src/beltgradient/fetch.py') }}
+      - name: Fetch
+        run: belt-gradient fetch
+      - name: Full run against the committed summary
+        run: pytest -q -m "slow or not slow"
+      - name: Versions used
+        if: always()
+        run: pip list --format=freeze | grep -iE "^(numpy|pandas|scipy|matplotlib|pyarrow)=="

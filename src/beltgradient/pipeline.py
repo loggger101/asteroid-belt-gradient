@@ -122,10 +122,14 @@ def _log(verbose, *a):
 
 
 def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True) -> Results:
-    paths = paths or Paths.default()
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    warnings.filterwarnings("ignore", message="All-NaN slice")
-    plt.rcParams.update(RCPARAMS)
+    """The whole analysis. Its Matplotlib style and warning filters apply to the run only, not to the caller."""
+    with warnings.catch_warnings(), plt.rc_context(RCPARAMS):
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        warnings.filterwarnings("ignore", message="All-NaN slice")
+        return _run(paths or Paths.default(), write, verbose)
+
+
+def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     rng = np.random.default_rng(SEED)
     if write:
         paths.figures.mkdir(parents=True, exist_ok=True)

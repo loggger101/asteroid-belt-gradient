@@ -1,7 +1,8 @@
 name: tests
 
-# Fast tests only: synthetic frames, no network, no catalog. The full run against the
-# committed summary.json is `pytest -m slow` and needs `belt-gradient fetch` first.
+# Fast tests only: no network, no catalog. They include a full run of the pipeline and the CLI on small
+# synthetic inputs (tests/conftest.py). The full run on the real inputs against the committed
+# summary.json is `pytest -m slow`, in reproduce.yml.
 
 on:
   push:

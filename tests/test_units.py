@@ -1,4 +1,6 @@
 """Fast tests on synthetic frames. No catalog, no network."""
+import hashlib
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -6,7 +8,9 @@ import pytest
 from beltgradient.catalog import norm_key, to_group
 from beltgradient.completeness import complete_limit, diameter_limit
 from beltgradient.config import H_EDGES, SNOW_LINE_AU, ZONE_NAMES
-from beltgradient.families import V1AU, family_table, zappala_distance, zappala_embedding
+from beltgradient.families import (V1AU, extend_families, family_table, load_families, load_proper_elements,
+                                   zappala_distance, zappala_embedding)
+from beltgradient.fetch import download
 from beltgradient.gradient import c_fraction_curve, collapsed, fit_logistic
 from beltgradient.orbits import ks_only, orbit_tests
 
@@ -50,6 +54,55 @@ def test_embedding_matches_the_metric_term_by_term(da, de, ds, tol):
         assert np.linalg.norm(x[1] - x[0]) == pytest.approx(exact, rel=tol)
 
 
+def test_extend_families_is_one_step_and_uses_the_nearest_members_cutoff():
+    # at a = 2.5 AU, de = 0.001 is 26.6 m/s; at 3.0 AU, 24.3 m/s. Four listed members, fewer than the
+    # K_CANDIDATES neighbours the search asks for.
+    rows = [("f1", "F", 2.5, 0.100, 0.1), ("f2", "F", 2.5, 0.101, 0.1), ("f3", "F", 2.5, 0.102, 0.1),
+            ("g1", "G", 3.0, 0.050, 0.05),
+            ("near", None, 2.5, 0.1025, 0.1),     # 13 m/s from f3: joins F
+            ("chain", None, 2.5, 0.1040, 0.1),    # 40 m/s from "near" but 53 m/s from f3: no chaining
+            ("g_out", None, 3.0, 0.0508, 0.05),   # 19 m/s from g1: inside F's cutoff, outside G's
+            ("far", None, 2.9, 0.2, 0.2), ("no_proper", None, np.nan, np.nan, np.nan)]
+    df = pd.DataFrame(rows, columns=["key", "fam_id", "a_p", "e_p", "sini_p"])
+    df["in_family"] = df.fam_id.notna()
+    out, n = extend_families(df, pd.DataFrame({"fam_id": ["F", "G"], "cutoff": [50.0, 10.0]}))
+    assert n == 1
+    assert out.set_index("key").fam_id.dropna().to_dict() == {"f1": "F", "f2": "F", "f3": "F", "g1": "G", "near": "F"}
+    assert out.in_family.sum() == 5
+
+
+def test_load_families_handles_the_bundle_quirks(synthetic):
+    fams, members = load_families(synthetic[0].nesvorny)
+    f = fams.set_index("fam_id")
+    assert not {"2015_007", "2015_503"} & set(f.index)                     # list lines with no parent number
+    assert f.loc["2024_inner_0_2012pm61_fam3", ["fam_name", "cutoff"]].tolist() == ["2012 PM61", 15.0]
+    assert f.loc["2024_middle_177_irma_fam3", ["fam_name", "cutoff"]].tolist() == ["Irma", 60.0]
+    assert f.loc["2015_529", "n_listed"] == f.loc["2015_528", "n_listed"] == 15
+    # an identical list counts once, under the lower id; a body in two families goes to the larger (Koronis)
+    assert members.key.is_unique and not members.fam_id.isin(["2015_529", "2015_610"]).any()
+    assert "2012PM61" in set(members.key)
+
+
+def test_load_proper_elements(synthetic):
+    pc = load_proper_elements(synthetic[0].nesvorny)
+    assert list(pc.columns) == ["a_p", "e_p", "sini_p", "H_p", "key"] and pc.key.is_unique
+    assert pc.a_p.between(1.8, 4).all() and pc.e_p.between(0, 0.6).all() and pc.sini_p.between(0, 0.5).all()
+    assert "2012PM61" in set(pc.key)
+
+
+def test_download_checks_the_sha256(tmp_path):
+    src, dest = tmp_path / "src.bin", tmp_path / "dest.bin"
+    src.write_bytes(b"asteroid")
+    good = hashlib.sha256(b"asteroid").hexdigest()
+    with pytest.raises(RuntimeError, match="sha256"):
+        download(src.as_uri(), dest, "0" * 64)
+    assert not dest.exists() and not (tmp_path / "dest.bin.part").exists()
+    download(src.as_uri(), dest, good)
+    assert dest.read_bytes() == b"asteroid"
+    src.unlink()
+    download(src.as_uri(), dest, good)               # already there and verified: nothing is fetched
+
+
 def test_complete_limit_finds_first_incomplete_bin():
     idx = pd.IntervalIndex.from_breaks(H_EDGES)
     comp = pd.DataFrame(1.0, index=idx, columns=ZONE_NAMES)
@@ -58,6 +111,8 @@ def test_complete_limit_finds_first_incomplete_bin():
     k = int(np.searchsorted(H_EDGES, 10.5))
     comp.iloc[k:, 2] = 0.9                           # one zone drops below 95% at H = 10.5
     assert complete_limit(comp, n) == 10.5
+    comp.iloc[:, :] = 1.0                            # complete everywhere: the faintest edge
+    assert complete_limit(comp, n) == H_EDGES[-1]
 
 
 def test_logistic_recovers_crossover():

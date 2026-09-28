@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from . import __version__
@@ -17,6 +18,12 @@ def main(argv=None) -> None:
     r = sub.add_parser("run", help="regenerate every figure and results/summary.json (~3 min)")
     r.add_argument("--no-write", action="store_true", help="compute only; do not overwrite figures/ or results/")
     a = p.parse_args(argv)
+
+    # the log names samples "D≥10 km": write UTF-8 even to a file or pipe whose locale codec (cp1252 on
+    # Windows) cannot encode it, which would otherwise stop a run before summary.json is written
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
 
     import matplotlib
     matplotlib.use("Agg")

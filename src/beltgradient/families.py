@@ -21,13 +21,18 @@ from scipy.spatial import cKDTree
 from .catalog import norm_key
 
 
+def _lines(path) -> list[str]:
+    with open(path, encoding="ascii") as f:
+        return f.readlines()
+
+
 def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Return (families, members). A body listed in two families goes to the larger one."""
     data = nesvorny / "data"
 
     # ── 2015 families: list + members ───────────────────────────────────────
     fl_rows = []
-    for line in open(data / "familylist.tab", encoding="ascii"):
+    for line in _lines(data / "familylist.tab"):
         m = re.match(r"^(\d{3})\s+(\d+)\s+(.*?)\s+(\d+)\s+(\d+)\s+[\d.]+", line)
         if m:
             fl_rows.append(dict(fam_id=f"2015_{m[1]}", parent_num=m[2], fam_name=m[3].strip(), cutoff=float(m[4])))
@@ -35,7 +40,7 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     mem = []
     for f in sorted(glob(str(data / "families_2015" / "*.tab"))):
-        for line in open(f, encoding="ascii"):
+        for line in _lines(f):
             t = line.split()
             if len(t) >= 7:
                 mem.append((t[0], f"2015_{t[6]}"))
@@ -45,7 +50,7 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     # A numbered parent is listed by number ("177 Irma  ..."); an unnumbered one as "-- 2012 PM61  ...",
     # whose files carry parent number 0 and the designation ("inner_0_2012pm61_fam3").
     cut24 = {}
-    for line in open(nesvorny / "document" / "list_of_new_families_2024.txt", encoding="ascii"):
+    for line in _lines(nesvorny / "document" / "list_of_new_families_2024.txt"):
         m = re.match(r"^(\d+|--)\s+(.*?)\s+(\d+)\s+(\d+)(\s+\S+)?\s*$", line.strip())
         if m:
             key = m[1] if m[1] != "--" else m[2].replace(" ", "").lower()
@@ -130,10 +135,12 @@ def extend_families(df: pd.DataFrame, fams: pd.DataFrame, chunk: int = 100_000) 
     tgt = df[has_p & ~df.in_family]
     sa, se, ss = (src[c].values for c in ("a_p", "e_p", "sini_p"))
     tree = cKDTree(zappala_embedding(sa, se, ss))
+    k = min(K_CANDIDATES, len(src))          # asking for more than there are pads with an out-of-range index
     best, dmin = np.empty(len(tgt), int), np.empty(len(tgt))
     for lo in range(0, len(tgt), chunk):
         ta, te, ts = (tgt[c].values[lo:lo + chunk, None] for c in ("a_p", "e_p", "sini_p"))
-        _, idx = tree.query(zappala_embedding(ta[:, 0], te[:, 0], ts[:, 0]), k=K_CANDIDATES)
+        _, idx = tree.query(zappala_embedding(ta[:, 0], te[:, 0], ts[:, 0]), k=k)
+        idx = idx.reshape(len(ta), k)        # k = 1 returns a flat array
         d = zappala_distance(ta, te, ts, sa[idx], se[idx], ss[idx])
         j = d.argmin(axis=1)
         best[lo:lo + chunk] = idx[np.arange(len(j)), j]

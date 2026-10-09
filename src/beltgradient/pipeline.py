@@ -24,16 +24,21 @@ from . import figures as F
 from .gradient import DEN, NUM, build_samples, collapsed, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, zone_point, zone_table
 from .orbits import ks_only, orbit_sample, orbit_tests
 
-# name, bbox_inches for each output PNG
+# output PNG for each figure, and its number in the paper. Every figure is saved at its drawn (print) size.
 FIGURE_FILES = {
-    "completeness": ("fig0_completeness.png", None),
-    "c_fraction": ("fig1_c_fraction_vs_a.png", "tight"),
-    "stacked": ("fig1b_stacked_composition.png", "tight"),
-    "mass": ("fig2_mass_by_zone.png", "tight"),
-    "orbits": ("fig3_orbital_excitation.png", "tight"),
-    "dark": ("fig4_dark_fraction_albedo.png", None),
-    "circularity": ("fig5_circularity.png", None),
+    "completeness": ("fig0_completeness.png", "A1"),
+    "c_fraction": ("fig1_c_fraction_vs_a.png", "2"),
+    "stacked": ("fig1b_stacked_composition.png", "3"),
+    "mass": ("fig2_mass_by_zone.png", "5"),
+    "orbits": ("fig3_orbital_excitation.png", "7"),
+    "dark": ("fig4_dark_fraction_albedo.png", "9"),
+    "circularity": ("fig5_circularity.png", "1"),
+    "size_map": ("fig6_size_distance_map.png", "4"),
+    "crossover": ("fig7_crossover_fits.png", "6"),
+    "proper": ("fig8_proper_elements.png", "8"),
+    "robustness": ("fig9_robustness.png", "10"),
 }
+DPI = 300
 
 
 @dataclass
@@ -184,9 +189,8 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
         paths.results.mkdir(parents=True, exist_ok=True)
 
     def save(key, fig):
-        name, bbox = FIGURE_FILES[key]
         if write:
-            fig.savefig(paths.figures / name, dpi=200, bbox_inches=bbox)
+            fig.savefig(paths.figures / FIGURE_FILES[key][0], dpi=DPI)
         plt.close(fig)
 
     # 1–2 · catalog, main belt, compositional groups
@@ -302,6 +306,13 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
         "text_numbers": text,
         "software": {"beltgradient": __version__, "seed": SEED},
     }
+
+    # 11 · figures drawn only from the numbers above (no RNG)
+    save("size_map", F.size_distance_map(samples[keys[1]]))
+    save("crossover", F.crossover_fits(xo))
+    save("proper", F.proper_element_map(mb, orb, ftab))
+    save("robustness", F.robustness_summary(summary, keys))
+
     if write:
         # "\n" on every platform, so a run reproduces the committed file byte for byte
         (paths.results / "summary.json").write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8", newline="\n")

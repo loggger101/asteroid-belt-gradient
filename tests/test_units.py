@@ -228,3 +228,11 @@ def test_size_distance_grid():
     _, _, f5, n5 = size_distance_grid(s5)
     assert n5[0, 2] == 5 and f5[0, 2] == pytest.approx(6 / 8)    # C weight 2+2+2 of 2+1+1+2+2
     assert n5[3, 10] == 3 and np.isnan(f5[3, 10])          # >= 100 km at 3.1-3.2 AU: 3 bodies, blank
+
+
+def test_bhac15_track_matches_the_quoted_luminosities():
+    from beltgradient.bhac15 import TRACK_1MSUN
+    from beltgradient.config import BHAC15_1MSUN_LOGL
+    track = dict(TRACK_1MSUN)
+    assert len(TRACK_1MSUN) == 198 and all(a < b for (a, _), (b, _) in zip(TRACK_1MSUN, TRACK_1MSUN[1:]))
+    assert track[6.001799] == BHAC15_1MSUN_LOGL["1.0 Myr"] and track[6.703958] == BHAC15_1MSUN_LOGL["5.1 Myr"]

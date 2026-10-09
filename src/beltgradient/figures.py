@@ -348,3 +348,113 @@ def robustness_summary(summary: dict, keys: list[str]):
         ax.plot([], [], marker=ZONE_MARKERS[z], ms=3.3, color=ZONE_COLORS[z], ls="none", label=z)
     fig.legend(*ax.get_legend_handles_labels(), loc="outside upper center", ncol=4, handletextpad=.2, columnspacing=1.0)
     return fig
+
+
+# ── context figures: the snow line through time, how the samples are built, albedo by class (no RNG) ─────────
+
+def snow_line_track(track, crossover: tuple[float, float]):
+    """Equation (1) scaled with the 1 M_sun pre-main-sequence luminosity (r ∝ L^1/2), against the present belt."""
+    t, logl = np.array(track, dtype=float).T
+    age = 10 ** t / 1e6
+    r = SNOW_LINE_AU * 10 ** (logl / 2)
+    fig, ax = _fig(COL_W, 2.1)
+    ax.axhspan(A_MIN, A_MAX, color=BAND, lw=0, zorder=0)
+    ax.axhspan(*crossover, color=COLORS["C-like"], alpha=.18, lw=0, zorder=1)
+    ax.axhline(SNOW_LINE_AU, color=SNOW, lw=.8, ls="--", zorder=1)
+    ax.plot(age, r, color=COLORS["C-like"], lw=1.4, zorder=3)
+    for a_myr in (1.0, 5.0):
+        k = int(np.argmin(abs(age - a_myr)))
+        ax.plot(age[k], r[k], "o", ms=3.2, color=COLORS["C-like"], mec="white", mew=.5, zorder=4)
+        ax.annotate(f"{r[k]:.1f} AU at {age[k]:.0f} Myr", (age[k], r[k]), xytext=(5, 3), textcoords="offset points",
+                    fontsize=5.5, color=INK2)
+    ax.set_xscale("log")
+    ax.set(xlim=(age[0], age[-1]), ylim=(1.5, 5.0), xlabel="age of a 1 $M_\\odot$ star (Myr)", ylabel="snow-line radius (AU)")
+    ax.set_xticks([.5, 1, 2, 5, 10, 20, 50], ["0.5", "1", "2", "5", "10", "20", "50"])
+    x0 = age[0] * 1.06
+    ax.text(age[-1] * .97, A_MAX - .05, "present main belt", ha="right", va="top", fontsize=5.5, color=INK2)
+    ax.text(x0, SNOW_LINE_AU + .04, "$L = L_\\odot$ (Equation 1)", fontsize=5.5, color=SNOW, va="bottom")
+    ax.text(x0, crossover[0] - .04, "debiased S/C crossover", va="top", fontsize=5.5, color=COLORS["C-like"])
+    return fig
+
+
+def _box(ax, x0, y0, x1, y1, lines, focal=False, muted=False):
+    from matplotlib.patches import FancyBboxPatch
+    fc, ec, ls = ("#e8f1fb", "#2a78d6", "-") if focal else (("#f7f6f3", RULE, (0, (3, 2))) if muted else ("white", INK, "-"))
+    ax.add_patch(FancyBboxPatch((x0, y0), x1 - x0, y1 - y0, boxstyle="round,pad=0,rounding_size=1.2", fc=fc, ec=ec,
+                                lw=.7, ls=ls, zorder=2))
+    head, *rest = lines
+    cy = (y0 + y1) / 2
+    n = len(lines)
+    step = 3.6
+    top = cy + step * (n - 1) / 2
+    ax.text((x0 + x1) / 2, top, head, ha="center", va="center", fontsize=5.8, fontweight="bold",
+            color=INK2 if muted else INK, zorder=3)
+    for i, s in enumerate(rest, 1):
+        ax.text((x0 + x1) / 2, top - i * step, s, ha="center", va="center", fontsize=5.5, color=INK2, zorder=3)
+
+
+def _arrow(ax, pts):
+    from matplotlib.patches import FancyArrowPatch
+    from matplotlib.path import Path
+    ax.add_patch(FancyArrowPatch(path=Path(pts), arrowstyle="-|>", mutation_scale=5.5, lw=.7, color=INK2,
+                                 shrinkA=0, shrinkB=0, zorder=1))
+
+
+def sample_flow(summary: dict, keys: list[str]):
+    """How the analysed samples are built from the catalog release, with the number of bodies at each step."""
+    c, tn, ss = summary["catalog"], summary["text_numbers"], summary["sample_sizes"]
+    tiers = tn["n_main_belt_by_label_tier"]
+    fig, ax = plt.subplots(figsize=(COL_W, 2.75))
+    fig.subplots_adjust(0, 0, 1, 1)
+    ax.set(xlim=(0, 100), ylim=(0, 100)); ax.axis("off")
+    _box(ax, 8, 86, 92, 99, [f"AsteroidCatalog {c['release']}: {c['rows']:,} bodies",
+                             f"main belt (2.1 < a < 3.3 AU, q > 1.3 AU): {c['main_belt']:,}"])
+    _box(ax, 1, 62, 33, 77, ["published taxonomy", f"{tiers['taxonomy']:,}", "the labels analysed"], focal=True)
+    _box(ax, 35, 62, 65, 77, ["measured albedo", f"{tiers['albedo_proxy']:,}", "labels not used"], muted=True)
+    _box(ax, 67, 62, 99, 77, ["assumed albedo", f"{tiers['assumed']:,}", "circular (Fig. 2)"], muted=True)
+    for x in (17, 50, 83):
+        _arrow(ax, [(x, 86), (x, 77)])
+    fam = tn["families_with_main_belt_members"], tn["families_classifiable"]
+    _box(ax, 12, 39, 76, 54, [f"collisional families ({fam[0]} in the main belt)",
+                              f"{fam[1]} classified: each collapsed to one body,", "or its members removed (background)"])
+    _arrow(ax, [(22, 62), (22, 54)])
+    w, y0, y1 = 23.5, 2, 21
+    xs = [1, 26, 51, 76]
+    labels = [("raw", "families kept", f"n = {ss['raw']:,}"),
+              ("collapsed, IPW", "D ≥ 10 km", f"n = {ss['collapsed_ipw']:,}"),
+              ("collapsed", f"D ≥ {summary['completeness']['D_complete_km']:.0f} km", f"n = {ss['collapsed_complete']:,}"),
+              ("background", f"D ≥ {summary['completeness']['D_complete_km']:.0f} km", f"n = {ss['background_complete']:,}")]
+    for x0, lab in zip(xs, labels):
+        _box(ax, x0, y0, x0 + w, y1, list(lab))
+    _arrow(ax, [(6, 62), (6, y1)])                                  # raw: straight from the labelled bodies
+    _arrow(ax, [(37.75, 39), (37.75, y1)])                          # collapsed, IPW
+    _arrow(ax, [(58, 39), (58, 32), (62.75, 32), (62.75, y1)])      # collapsed, size-complete
+    _arrow(ax, [(76, 46.5), (87.75, 46.5), (87.75, y1)])            # background
+    return fig
+
+
+ALBEDO_GROUPS = ["S-like", "C-like", "D/P", "X"]
+
+
+def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
+    """Measured geometric albedo of the bodies with a published taxonomy, by group (normalised histograms)."""
+    t = mb[mb.tier.eq("taxonomy") & mb.albedo.notna() & (mb.albedo > 0)]
+    bins = np.logspace(-2, 0, 61)
+    fig, ax = _fig(COL_W, 2.0)
+    for g in ALBEDO_GROUPS:
+        a = t.loc[t.group.eq(g), "albedo"].clip(1e-2, .999)
+        ax.hist(a, bins=bins, density=True, histtype="step", lw=1.0, color=COLORS[g], label=f"{g} (n = {len(a):,})")
+    ax.axvline(cuts[0], color=INK2, lw=.7)
+    ax.axvline(cuts[1], color=INK2, lw=.6, ls=":")
+    ax.set_xscale("log")
+    ax.set_ylim(0, ax.get_ylim()[1] * 1.12)
+    ax.text(cuts[0] * .96, .99, f"dark | bright ({cuts[0]:.2f})", transform=ax.get_xaxis_transform(), ha="right", va="top",
+            fontsize=5.5, color=INK2)
+    ax.text(cuts[1] * 1.04, .99, f"X: M | E ({cuts[1]:.2f})", transform=ax.get_xaxis_transform(), va="top", fontsize=5.5,
+            color=INK2)
+    ax.set_xticks([.01, .02, .05, .1, .2, .5, 1], ["0.01", "0.02", "0.05", "0.1", "0.2", "0.5", "1"])
+    ax.set(xlim=(.01, 1), xlabel="measured geometric albedo $p_V$", ylabel="probability density")
+    ax.set_yticks([])
+    ax.spines["left"].set_visible(False)
+    ax.legend(loc="center right", handlelength=1.2)
+    return fig

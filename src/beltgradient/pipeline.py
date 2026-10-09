@@ -14,7 +14,8 @@ import numpy as np
 import pandas as pd
 
 from . import __version__
-from .albedo import with_measured_albedo
+from .albedo import DARK_ALBEDO, with_measured_albedo
+from .bhac15 import TRACK_1MSUN
 from .catalog import load_catalog, main_belt, split_x_by_albedo
 from .completeness import add_h_bins, add_ipw_weights, complete_limit, completeness, diameter_limit
 from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, CATALOG_RELEASE, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, X_SPLIT_ALBEDO, ZONE_NAMES, Paths
@@ -27,16 +28,19 @@ from .orbits import ks_only, orbit_sample, orbit_tests
 # output PNG for each figure, and its number in the paper. Every figure is saved at its drawn (print) size.
 FIGURE_FILES = {
     "completeness": ("fig0_completeness.png", "A1"),
-    "c_fraction": ("fig1_c_fraction_vs_a.png", "2"),
-    "stacked": ("fig1b_stacked_composition.png", "3"),
-    "mass": ("fig2_mass_by_zone.png", "5"),
-    "orbits": ("fig3_orbital_excitation.png", "7"),
-    "dark": ("fig4_dark_fraction_albedo.png", "9"),
-    "circularity": ("fig5_circularity.png", "1"),
-    "size_map": ("fig6_size_distance_map.png", "4"),
-    "crossover": ("fig7_crossover_fits.png", "6"),
-    "proper": ("fig8_proper_elements.png", "8"),
-    "robustness": ("fig9_robustness.png", "10"),
+    "c_fraction": ("fig1_c_fraction_vs_a.png", "4"),
+    "stacked": ("fig1b_stacked_composition.png", "5"),
+    "mass": ("fig2_mass_by_zone.png", "7"),
+    "orbits": ("fig3_orbital_excitation.png", "9"),
+    "dark": ("fig4_dark_fraction_albedo.png", "11"),
+    "circularity": ("fig5_circularity.png", "2"),
+    "size_map": ("fig6_size_distance_map.png", "6"),
+    "crossover": ("fig7_crossover_fits.png", "8"),
+    "proper": ("fig8_proper_elements.png", "10"),
+    "robustness": ("fig9_robustness.png", "13"),
+    "snow_line": ("fig10_snow_line_track.png", "1"),
+    "flow": ("fig11_sample_flow.png", "3"),
+    "albedo_groups": ("fig12_albedo_by_group.png", "12"),
 }
 DPI = 300
 
@@ -169,6 +173,27 @@ def x_split_by_albedo(mb, fams, ftab, samples, keys, d_c) -> dict:
     }
 
 
+def albedo_by_group_numbers(mb) -> dict:
+    """Measured albedo of the taxonomy-labelled bodies, per group: n, median, and the shares either side of the cuts."""
+    t = mb[mb.tier.eq("taxonomy") & mb.albedo.notna()]
+    out = {}
+    for g in GROUP_ORDER:
+        a = t.loc[t.group.eq(g), "albedo"]
+        out[g] = {"n": int(len(a)), "median_pV": _round(a.median(), 3),
+                  "frac_below_0.10": _round((a < DARK_ALBEDO).mean()), "frac_at_least_0.30": _round((a >= X_SPLIT_ALBEDO[1]).mean())}
+    return out
+
+
+def snow_line_track_numbers(cuts=(A_MAX, 2.5, A_MIN)) -> dict:
+    """Equation (1) along the BHAC15 1 M_sun track: when the snow line first lies inside each radius, and its minimum."""
+    t, logl = np.array(TRACK_1MSUN, dtype=float).T
+    age, r = 10 ** t / 1e6, SNOW_LINE_AU * 10 ** (logl / 2)
+    k = int(np.argmin(r))
+    return {"first_inside_au_myr": {f"{c:.1f}": _round(age[np.argmax(r < c)], 2) for c in cuts},
+            "min_au": _round(r[k], 2), "age_at_min_myr": _round(age[k], 1),
+            "au_at_track_start": _round(r[0], 2), "track_start_myr": _round(age[0], 2)}
+
+
 def _log(verbose, *a):
     if verbose:
         print(*a, flush=True)
@@ -286,7 +311,13 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
                 "d_edges_km": [None if np.isinf(v) else float(v) for v in d_e],
                 "c_fraction": [[_round(v, 3) for v in row] for row in f_ad], "n": [[int(v) for v in row] for row in n_ad]}
 
-    # 10 · summary numbers
+    # 9h · sample sizes (Fig. 3), measured albedo by taxonomic group (Fig. 12), the snow line along BHAC15 (Fig. 1)
+    sample_sizes = {"raw": int(len(samples[keys[0]])), "collapsed_ipw": int(len(samples[keys[1]])),
+                    "collapsed_complete": int(len(samples[keys[2]])), "background_complete": int(len(samples[keys[3]])),
+                    "orbit_test": {g: int(orb.group.eq(g).sum()) for g in ["S-like", "C-like"]},
+                    "measured_albedo": int(len(alb)), "albedo_check_complete_background": int(dark_zone["size"].sum())}
+    alb_groups = albedo_by_group_numbers(mb)
+    snow_track = snow_line_track_numbers()
     summary = {
         "catalog": {"release": CATALOG_RELEASE, "rows": int(len(cat)), "catalog_date": str(cat.catalog_date.iloc[0]), "pipeline_version": str(cat.pipeline_version.iloc[0]),
                     "main_belt": int(len(mb)), "taxonomy_tier": int(mb.tier.eq("taxonomy").sum())},
@@ -310,6 +341,9 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
         },
         "x_split_by_albedo": xsplit,
         "size_distance_map": size_map,
+        "sample_sizes": sample_sizes,
+        "albedo_by_group": alb_groups,
+        "snow_line_track": snow_track,
         "text_numbers": text,
         "software": {"beltgradient": __version__, "seed": SEED},
     }
@@ -319,6 +353,9 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     save("crossover", F.crossover_fits(xo))
     save("proper", F.proper_element_map(mb, orb, ftab))
     save("robustness", F.robustness_summary(summary, keys))
+    save("snow_line", F.snow_line_track(TRACK_1MSUN, (xo.a50.iloc[1:].min(), xo.a50.iloc[1:].max())))
+    save("flow", F.sample_flow(summary, keys))
+    save("albedo_groups", F.albedo_by_group(mb, X_SPLIT_ALBEDO))
 
     if write:
         # "\n" on every platform, so a run reproduces the committed file byte for byte

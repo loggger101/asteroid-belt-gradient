@@ -20,7 +20,7 @@ from scipy import stats
 
 from .albedo import dark_curve
 from .config import A_MAX, A_MIN, BIN_W, COLORS, COMPLETE_FRAC, D_ORBIT, KIRKWOOD, SNOW_LINE_AU, ZONE_NAMES
-from .gradient import c_fraction_curve, mass_by_zone
+from .gradient import MIN_CELL, c_fraction_curve, mass_by_zone, size_distance_grid
 from .orbits import ELEMENTS, split_by_class
 
 COL_W, FULL_W = 3.3125, 7.0208      # inches: the paper's column and text widths
@@ -188,26 +188,13 @@ def circularity(assumed: pd.DataFrame, raw: pd.DataFrame, rng: np.random.Generat
 
 # ── figures that draw nothing from the RNG ──────────────────────────────────
 
-SIZE_EDGES_KM = [10, 20, 50, 100, np.inf]
-MIN_CELL = 5
-
-
 def size_distance_map(s: pd.DataFrame):
     """C/(S+C) of the completeness-weighted, family-collapsed sample in bins of a (0.1 AU) and D.
 
     Cells with fewer than ``MIN_CELL`` S- and C-type bodies are left blank (a dot marks one that has any).
     """
-    s = s[s.group.isin(["S-like", "C-like"])]
-    a_edges = np.round(np.arange(A_MIN, A_MAX + 1e-9, 0.1), 2)
-    d_edges = np.array(SIZE_EDGES_KM, dtype=float)
-    ai = np.clip(np.digitize(s.semi_major_axis_au, a_edges) - 1, 0, len(a_edges) - 2)
-    di = np.clip(np.digitize(s.diameter_km, d_edges) - 1, 0, len(d_edges) - 2)
-    shape = (len(d_edges) - 1, len(a_edges) - 1)
-    num, den, n = np.zeros(shape), np.zeros(shape), np.zeros(shape)
-    np.add.at(num, (di, ai), s.w.values * s.group.eq("C-like").values)
-    np.add.at(den, (di, ai), s.w.values)
-    np.add.at(n, (di, ai), 1)
-    f = np.where(n >= MIN_CELL, num / np.maximum(den, 1e-300), np.nan)
+    a_edges, _, f, n = size_distance_grid(s)
+    shape = f.shape
     cmap = LinearSegmentedColormap.from_list("s_to_c", [COLORS["S-like"], "#f0efec", COLORS["C-like"]])
     fig, ax = _fig(COL_W, 2.15)
     m = ax.pcolormesh(a_edges, np.arange(shape[0] + 1), np.ma.masked_invalid(f), cmap=cmap, norm=TwoSlopeNorm(.5, 0, 1),

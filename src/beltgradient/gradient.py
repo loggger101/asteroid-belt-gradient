@@ -92,6 +92,30 @@ def zone_point(s: pd.DataFrame, which: str = "narrow") -> pd.DataFrame:
                         index=ZONE_NAMES)
 
 
+SIZE_EDGES_KM = [10, 20, 50, 100, np.inf]
+MIN_CELL = 5
+
+
+def size_distance_grid(s: pd.DataFrame):
+    """Weighted C/(S+C) in 0.1 AU x ``SIZE_EDGES_KM`` cells: (a_edges, d_edges, fraction, n).
+
+    ``n`` counts S- and C-type bodies per cell; the fraction is NaN where ``n < MIN_CELL``. Rows are the size bins
+    from small to large, columns the a bins.
+    """
+    s = s[s.group.isin(["S-like", "C-like"])]
+    a_edges = np.round(np.arange(A_MIN, A_MAX + 1e-9, 0.1), 2)
+    d_edges = np.array(SIZE_EDGES_KM, dtype=float)
+    ai = np.clip(np.digitize(s.semi_major_axis_au, a_edges) - 1, 0, len(a_edges) - 2)
+    di = np.clip(np.digitize(s.diameter_km, d_edges) - 1, 0, len(d_edges) - 2)
+    shape = (len(d_edges) - 1, len(a_edges) - 1)
+    num, den, n = np.zeros(shape), np.zeros(shape), np.zeros(shape, dtype=int)
+    np.add.at(num, (di, ai), s.w.values * s.group.eq("C-like").values)
+    np.add.at(den, (di, ai), s.w.values)
+    np.add.at(n, (di, ai), 1)
+    f = np.where(n >= MIN_CELL, num / np.maximum(den, 1e-300), np.nan)
+    return a_edges, d_edges, f, n
+
+
 def zone_table(samples: dict[str, pd.DataFrame], rng: np.random.Generator, which: str = "narrow") -> pd.DataFrame:
     """C-fraction per zone for every sample, formatted "f [lo–hi] (n=N)"."""
     rows = {}

@@ -67,7 +67,7 @@ def c_fraction_panels(samples: dict[str, pd.DataFrame], panel_keys: list[str], r
 
 
 def stacked_composition(s: pd.DataFrame, d_c: float):
-    """All five groups for the size-complete, family-collapsed sample (counts above bars)."""
+    """All five groups for the size-complete, family-collapsed sample, with each bin's count above the plot."""
     edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
     s = s.assign(bin=pd.cut(s.semi_major_axis_au, edges))
     order = GROUP_ORDER
@@ -76,11 +76,12 @@ def stacked_composition(s: pd.DataFrame, d_c: float):
     fig, ax = plt.subplots(figsize=(7.5, 3.8))
     x = [iv.mid for iv in frac.index]
     ax.stackplot(x, [frac[g] for g in order], colors=[COLORS[g] for g in order], labels=order, alpha=.9)
+    # counts in their own row above the resonance labels, which mark_structure puts just over the axes
     for xi, n in zip(x, st.sum(axis=1)):
-        ax.text(xi, 1.005, f"{int(n)}", ha="center", va="bottom", fontsize=6.5, color="0.4")
+        ax.text(xi, 1.075, f"{int(n)}", transform=ax.get_xaxis_transform(), ha="center", va="bottom", fontsize=6.5, color="0.4")
     mark_structure(ax, snow=False)
-    ax.set(xlim=(A_MIN + .05, A_MAX - .05), ylim=(0, 1), xlabel="a (AU)", ylabel="fraction by number",
-           title=f"Composition, family-collapsed, D ≥ {d_c:.0f} km (counts above bars)")
+    ax.set(xlim=(A_MIN + .05, A_MAX - .05), ylim=(0, 1), xlabel="a (AU)", ylabel="fraction by number")
+    ax.set_title(f"Composition, family-collapsed, D ≥ {d_c:.0f} km (top row: bodies per 0.1 AU bin)", pad=26)
     ax.legend(loc="center left", bbox_to_anchor=(1, .5), fontsize=8); fig.tight_layout()
     return fig
 

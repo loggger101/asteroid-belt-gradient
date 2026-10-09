@@ -32,9 +32,9 @@ H_EDGES        = np.arange(3, 19.5, 0.5)
 COLORS = {"S-like": "#c0392b", "C-like": "#2c3e50", "D/P": "#7d5a3c", "K/L": "#d68910", "X": "#8e8e8e", "other": "#cccccc"}
 
 # ── inputs ──────────────────────────────────────────────────────────────────
-# The AsteroidCatalog build analysed here: a frozen, checksummed GitHub release (data contract 1.6.0).
+# The AsteroidCatalog build analysed here: a frozen, checksummed GitHub release (data contract 1.8.1).
 # JPL adds bodies daily, so a result must name its build; releases are never rebuilt under a tag.
-CATALOG_RELEASE = "data-2026-09-27"
+CATALOG_RELEASE = "data-2026-09-29c"
 
 
 @dataclass(frozen=True)

@@ -1,7 +1,7 @@
 """Download and verify the two inputs.
 
-* The AsteroidCatalog release ``CATALOG_RELEASE`` (``data-2026-09-27``: 1,568,641 bodies, data
-  contract 1.6.0). A release is one frozen build that is never rebuilt under its tag; the sha256
+* The AsteroidCatalog release ``CATALOG_RELEASE`` (``data-2026-09-29c``: 1,568,882 bodies, data
+  contract 1.8.1). A release is one frozen build that is never rebuilt under its tag; the sha256
   below is the one its ``manifest.json`` lists for ``asteroid_catalog.parquet``.
 * ``ast.nesvorny.families_V2_0``: Nesvorný HCM families and proper elements, PDS Small Bodies Node.
 """
@@ -17,7 +17,7 @@ from . import __version__
 from .config import CATALOG_RELEASE, Paths
 
 CATALOG_URL = f"https://github.com/loggger101/AsteroidCatalog/releases/download/{CATALOG_RELEASE}/asteroid_catalog.parquet"
-CATALOG_SHA256 = "6adcc57afe045834b964c91fbc698635bbdafca6084390c4d6e3eef2664f9bc8"
+CATALOG_SHA256 = "227b5e06a8a9a01f83b607bc6ccc054823bd5475edbe59feb7d40a6d0354f3f7"
 NESVORNY_URL = "https://sbnarchive.psi.edu/pds4/non_mission/ast.nesvorny.families_V2_0.zip"
 NESVORNY_SHA256 = "4adf5a341eaea3f1fb209ccb4c875188f224a65b5f260d1d99e10be28f1b3145"
 TIMEOUT_S = 60

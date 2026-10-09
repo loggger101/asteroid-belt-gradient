@@ -140,7 +140,7 @@ def _catalog(rng, df: pd.DataFrame) -> pd.DataFrame:
         "diameter_source": np.select([measured, labelled], ["measured", "derived_h_taxonomy_albedo"], "derived_h_orbit_albedo"),
         "albedo": np.where(measured, df.p.round(3), np.nan), "absolute_magnitude_h": H, "estimated_mass_kg": mass,
         "mass_measured": df.D > 400, "albedo_assumed_for_diameter": assumed,
-        "catalog_date": "2026-09-27", "pipeline_version": "1.6.0",
+        "catalog_date": "2026-09-29", "pipeline_version": "1.8.1",
     })[COLS]
 
 

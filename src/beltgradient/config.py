@@ -25,6 +25,9 @@ D_IPW          = 10.0              # km; IPW sample is SIZE-limited (dark 10 km 
 C_MIN_IPW      = 0.30              # ...and completeness >= this
 D_ORBIT        = 10.0              # km, size floor for the orbital-excitation test
 EXTEND_FAMILIES = False            # one-step nearest-member extension (sensitivity test)
+# X complex by measured albedo (robustness test): P below 0.10, M to 0.30, E above, the convention Fornasier,
+# Clark & Dotto (2011, Icarus 214, 131) state after Tholen & Barucci (1989). The catalog splits X the same way.
+X_SPLIT_ALBEDO = (0.10, 0.30)
 N_BOOT         = 300
 SEED           = 4045              # one RNG stream for the whole run; draw order is fixed by pipeline.run()
 H_EDGES        = np.arange(3, 19.5, 0.5)

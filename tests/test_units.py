@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from beltgradient.catalog import norm_key, to_group
+from beltgradient.catalog import norm_key, split_x_by_albedo, to_group
 from beltgradient.completeness import complete_limit, diameter_limit
 from beltgradient.config import H_EDGES, SNOW_LINE_AU, ZONE_NAMES
 from beltgradient.families import (V1AU, extend_families, family_table, load_families, load_proper_elements,
                                    zappala_distance, zappala_embedding)
 from beltgradient.fetch import download
-from beltgradient.gradient import c_fraction_curve, collapsed, fit_logistic
+from beltgradient.gradient import c_fraction_curve, collapsed, fit_logistic, zone_point
 from beltgradient.orbits import ks_only, orbit_tests
 
 
@@ -191,3 +191,25 @@ def test_orbit_tests_bonferroni():
     assert not out.bonferroni_sig.any()
     ks = ks_only(pd.DataFrame(rows))                  # same KS, no bootstrap
     assert ks.KS_p.tolist() == out.KS_p.tolist()
+
+
+def test_split_x_by_albedo():
+    # P below 0.10 (joins D/P), M to 0.30, E above; Xe, Xk, Tholen M and unlabelled tiers untouched
+    st = ["X", "X", "X", "Xc", "Xt", "Xe", "Xk", "M", "X", "X", "C"]
+    alb = [0.05, 0.10, 0.31, 0.099, 0.2, 0.05, 0.05, 0.05, np.nan, 0.05, 0.05]
+    tier = ["taxonomy"] * 9 + ["albedo_proxy", "taxonomy"]
+    mb = pd.DataFrame({"spectral_type": st, "albedo": alb, "tier": tier})
+    mb["group"] = to_group(mb.spectral_type)
+    out = split_x_by_albedo(mb)
+    assert out.x_albedo_class.tolist() == ["P", "M", "E", "P", "M", None, None, None, None, None, None]
+    assert out.group.tolist() == ["D/P", "X", "X", "D/P", "X", "X", "X", "X", "X", "X", "C-like"]
+    assert mb.group.tolist()[0] == "X"                      # the input is not modified
+
+
+def test_zone_point_is_the_weighted_zone_fraction():
+    s = pd.DataFrame({"semi_major_axis_au": [2.2, 2.3, 2.4, 2.6, 3.0, 3.1],
+                      "group": ["S-like", "C-like", "X", "D/P", "C-like", "S-like"], "w": [1.0, 3.0, 5.0, 1.0, 2.0, 2.0]})
+    narrow, broad = zone_point(s, "narrow"), zone_point(s, "broad")
+    assert narrow.loc["inner", "f"] == pytest.approx(0.75) and narrow.loc["inner", "n"] == 2   # X ignored
+    assert np.isnan(narrow.loc["middle", "f"]) and broad.loc["middle", "f"] == pytest.approx(1.0)
+    assert narrow.loc["outer", "f"] == pytest.approx(0.5) and np.isnan(narrow.loc["pristine", "f"])

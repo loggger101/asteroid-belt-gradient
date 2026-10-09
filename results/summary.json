@@ -378,6 +378,106 @@
       }
     ]
   },
+  "x_split_by_albedo": {
+    "albedo_cuts_P_M_E": [
+      0.1,
+      0.3
+    ],
+    "n_taxonomy_X_group": 13763,
+    "n_split": 7755,
+    "n_split_by_class": {
+      "P": 4513,
+      "M": 2960,
+      "E": 282
+    },
+    "split_by_zone": {
+      "inner": {
+        "P": 473,
+        "M": 656,
+        "E": 130
+      },
+      "middle": {
+        "P": 1655,
+        "M": 735,
+        "E": 112
+      },
+      "pristine": {
+        "P": 236,
+        "M": 187,
+        "E": 13
+      },
+      "outer": {
+        "P": 2149,
+        "M": 1382,
+        "E": 27
+      }
+    },
+    "P_share_of_split_by_zone": {
+      "inner": 0.3757,
+      "middle": 0.6615,
+      "pristine": 0.5413,
+      "outer": 0.604
+    },
+    "families_reclassified": 10,
+    "zone_c_fraction_broad": {
+      "raw": {
+        "inner": 0.3001,
+        "middle": 0.4238,
+        "pristine": 0.4798,
+        "outer": 0.7435
+      },
+      "collapsed, IPW, D\u226510 km": {
+        "inner": 0.619,
+        "middle": 0.74,
+        "pristine": 0.8677,
+        "outer": 0.9366
+      },
+      "collapsed, D\u226553 km": {
+        "inner": 0.4773,
+        "middle": 0.7516,
+        "pristine": 0.8,
+        "outer": 0.9366
+      },
+      "background, D\u226553 km": {
+        "inner": 0.5517,
+        "middle": 0.7795,
+        "pristine": 0.8286,
+        "outer": 0.9435
+      }
+    },
+    "zone_c_fraction_narrow": {
+      "raw": {
+        "inner": 0.2457,
+        "middle": 0.3465,
+        "pristine": 0.3963,
+        "outer": 0.6966
+      },
+      "collapsed, IPW, D\u226510 km": {
+        "inner": 0.5265,
+        "middle": 0.6318,
+        "pristine": 0.7653,
+        "outer": 0.8962
+      },
+      "collapsed, D\u226553 km": {
+        "inner": 0.3947,
+        "middle": 0.6899,
+        "pristine": 0.6897,
+        "outer": 0.9015
+      },
+      "background, D\u226553 km": {
+        "inner": 0.4583,
+        "middle": 0.7083,
+        "pristine": 0.7143,
+        "outer": 0.9057
+      }
+    },
+    "max_abs_change_broad": 0.064,
+    "max_abs_change_narrow": 0.0103,
+    "dp_share_per_0.1AU_bin_from_2.9AU": [
+      0.286,
+      0.56
+    ]
+  },
   "text_numbers": {
     "n_main_belt_by_label_tier": {
       "assumed": 1201743,
@@ -474,7 +574,7 @@
     "inner_mass_S_of_all_classified": 0.8912
   },
   "software": {
-    "beltgradient": "2.3.1",
+    "beltgradient": "2.4.0",
     "seed": 4045
   }
 }

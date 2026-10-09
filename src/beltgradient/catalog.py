@@ -26,9 +26,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-from .config import A_MAX, A_MIN, Q_MIN, ZONE_NAMES, ZONES
+from .config import A_MAX, A_MIN, Q_MIN, X_SPLIT_ALBEDO, ZONE_NAMES, ZONES
 
 COLS = ["designation", "name", "spectral_type", "spectral_type_source", "semi_major_axis_au", "eccentricity",
         "inclination_deg", "perihelion_au", "diameter_km", "diameter_source", "albedo", "absolute_magnitude_h",
@@ -36,13 +37,16 @@ COLS = ["designation", "name", "spectral_type", "spectral_type_source", "semi_ma
 
 # First letter of the Bus–DeMeo (DeMeo et al. 2009) / Mahlke / Tholen class. K/L are anhydrous but
 # CV/CO-linked (Sunshine et al. 2008; Clark et al. 2009), so kept apart; X is excluded from the S/C
-# fraction (without albedo it spans enstatite, metal and P-like bodies; DeMeo & Carry 2013). Z, Mahlke
+# fraction (without albedo it spans enstatite, metal and P-like bodies; DeMeo & Carry 2013; split_x_by_albedo
+# splits it by measured albedo as a robustness test). Z, Mahlke
 # et al.'s (2022) class of extremely red objects, is counted with D/P; F, one of Tholen's (1984) minor
 # classes, as C-like.
 GROUP_OF_LETTER = {**dict.fromkeys(list("SQAVRO"), "S-like"), **dict.fromkeys(list("CBF"), "C-like"),
                    **dict.fromkeys(list("DPTZ"), "D/P"), **dict.fromkeys(list("KL"), "K/L"),
                    **dict.fromkeys(list("XME"), "X")}
 TIER_OF_SOURCE = {"source": "taxonomy", "albedo": "albedo_proxy", "albedo_assumed": "assumed"}
+# Bus–DeMeo Xe and Xk already say which X they are (enstatite-like, metal-like); Tholen's M and E labels too
+X_SPLIT_EXEMPT = ("Xe", "Xk")
 
 
 def norm_key(s: pd.Series) -> pd.Series:
@@ -59,6 +63,23 @@ def load_catalog(path: Path) -> pd.DataFrame:
     cat = pd.read_parquet(path, columns=COLS)
     cat["key"] = norm_key(cat["designation"])
     return cat
+
+
+def split_x_by_albedo(mb: pd.DataFrame) -> pd.DataFrame:
+    """A copy in which X-types with a measured albedo get the Tholen class it indicates (``x_albedo_class``).
+
+    X, Xc and the other X sub-classes (not Xe or Xk) with a taxonomy label and a measured albedo are P below
+    ``X_SPLIT_ALBEDO[0]``, M up to ``X_SPLIT_ALBEDO[1]`` and E above. P-types join the D/P group; M- and E-like
+    bodies stay X, which the fractions exclude. X-types without a measured albedo are unchanged.
+    """
+    out = mb.copy()
+    st = out.spectral_type.astype(str)
+    split = out.tier.eq("taxonomy") & st.str.startswith("X") & ~st.isin(X_SPLIT_EXEMPT) & out.albedo.notna()
+    lo, hi = X_SPLIT_ALBEDO
+    cls = np.select([out.albedo < lo, out.albedo < hi], ["P", "M"], "E")
+    out["x_albedo_class"] = pd.Series(np.where(split, cls, None), index=out.index, dtype="object")
+    out.loc[split & (out.albedo < lo), "group"] = "D/P"
+    return out
 
 
 def main_belt(cat: pd.DataFrame) -> pd.DataFrame:

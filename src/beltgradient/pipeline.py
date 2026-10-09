@@ -15,13 +15,13 @@ import pandas as pd
 
 from . import __version__
 from .albedo import with_measured_albedo
-from .catalog import load_catalog, main_belt
+from .catalog import load_catalog, main_belt, split_x_by_albedo
 from .completeness import add_h_bins, add_ipw_weights, complete_limit, completeness, diameter_limit
-from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, CATALOG_RELEASE, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, ZONE_NAMES, Paths
+from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, CATALOG_RELEASE, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, X_SPLIT_ALBEDO, ZONE_NAMES, Paths
 from .families import attach_families, extend_families, family_table, load_families, load_proper_elements
 from .figures import GROUP_ORDER, RCPARAMS
 from . import figures as F
-from .gradient import DEN, NUM, build_samples, collapsed, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, zone_table
+from .gradient import DEN, NUM, build_samples, collapsed, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, zone_point, zone_table
 from .orbits import ks_only, orbit_sample, orbit_tests
 
 # name, bbox_inches for each output PNG
@@ -113,6 +113,54 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "inner_mass_S_of_S_plus_C": round(float(mz.loc["inner", "S-like"] / (mz.loc["inner", "S-like"] + mz.loc["inner", "C-like"])), 4),
         "snow_line_au_on_bhac15_1msun_track": {age: round(SNOW_LINE_AU * 10 ** (logl / 2), 2) for age, logl in BHAC15_1MSUN_LOGL.items()},
         "inner_mass_S_of_all_classified": round(float(mz.loc["inner", "S-like"] / mz.loc["inner"].sum()), 4),
+    }
+
+
+def _round(x, nd=4):
+    return None if pd.isna(x) else round(float(x), nd)
+
+
+def x_split_by_albedo(mb, fams, ftab, samples, keys, d_c) -> dict:
+    """The X complex split by measured albedo: what it holds, and how much the fractions move.
+
+    Point estimates only (no RNG). Dark (P-like) X-types join D/P everywhere, families vote with them, and
+    the samples are rebuilt; the broad fraction counts D/P, so it is the one expected to move.
+    """
+    mbx = split_x_by_albedo(mb)
+    ftx = family_table(mbx, fams)
+    sx = build_samples(mbx, ftx, d_c)
+    xa = mbx[mbx.x_albedo_class.notna()]
+    by_zone = pd.crosstab(xa.zone, xa.x_albedo_class).reindex(index=ZONE_NAMES, columns=["P", "M", "E"], fill_value=0)
+    tax_x = mb[mb.tier.eq("taxonomy") & mb.group.eq("X")]
+    before = ftab.fam_group.reindex(ftx.index)
+    changed = ~((before == ftx.fam_group) | (before.isna() & ftx.fam_group.isna()))
+
+    def zones(smp, which):
+        return {k: {z: _round(f) for z, f in zone_point(smp[k], which).f.items()} for k in keys}
+
+    def max_change(which):
+        return _round(max(abs(zone_point(sx[k], which).f - zone_point(samples[k], which).f).max() for k in keys))
+
+    col = sx[keys[2]]
+    edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
+    st = (col[col.group.isin(GROUP_ORDER)].assign(bin=pd.cut(col.semi_major_axis_au, edges))
+          .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False).fillna(0))
+    dp = st.get("D/P", pd.Series(0.0, index=st.index)).div(st.sum(axis=1))
+    dp_outer = dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
+    return {
+        "albedo_cuts_P_M_E": list(X_SPLIT_ALBEDO),
+        "n_taxonomy_X_group": int(len(tax_x)),
+        "n_split": int(len(xa)),
+        "n_split_by_class": {c: int((xa.x_albedo_class == c).sum()) for c in ["P", "M", "E"]},
+        "split_by_zone": {z: {c: int(by_zone.at[z, c]) for c in ["P", "M", "E"]} for z in ZONE_NAMES},
+        "P_share_of_split_by_zone": {z: _round(by_zone.at[z, "P"] / by_zone.loc[z].sum()) if by_zone.loc[z].sum() else None
+                                     for z in ZONE_NAMES},
+        "families_reclassified": int(changed.sum()),
+        "zone_c_fraction_broad": zones(sx, "broad"),
+        "zone_c_fraction_narrow": zones(sx, "narrow"),
+        "max_abs_change_broad": max_change("broad"),
+        "max_abs_change_narrow": max_change("narrow"),
+        "dp_share_per_0.1AU_bin_from_2.9AU": [_round(dp_outer.min(), 3), _round(dp_outer.max(), 3)],
     }
 
 
@@ -225,6 +273,9 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     # 9e · numbers quoted in the paper's prose (point estimates only: no RNG, so nothing above moves)
     text = text_numbers(mb, ftab, comp, samples, keys, t, zt_narrow, zt_broad)
 
+    # 9f · X-types split by measured albedo (point estimates: no RNG)
+    xsplit = x_split_by_albedo(mb, fams, ftab, samples, keys, D_C)
+
     # 10 · summary numbers
     summary = {
         "catalog": {"release": CATALOG_RELEASE, "rows": int(len(cat)), "catalog_date": str(cat.catalog_date.iloc[0]), "pipeline_version": str(cat.pipeline_version.iloc[0]),
@@ -247,6 +298,7 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
             "max_abs_change_a50_au": round(float(ext_dxo), 4),
             "orbit_tests_ks": ks_alt.round(5).to_dict(orient="records"),
         },
+        "x_split_by_albedo": xsplit,
         "text_numbers": text,
         "software": {"beltgradient": __version__, "seed": SEED},
     }

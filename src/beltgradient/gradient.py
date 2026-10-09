@@ -80,6 +80,18 @@ def c_fraction_curve(s: pd.DataFrame, rng: np.random.Generator, which: str = "na
     return pd.DataFrame({"a": (edges[:-1] + edges[1:]) / 2, "f": f, "lo": lo, "hi": hi, "n": n})
 
 
+def zone_point(s: pd.DataFrame, which: str = "narrow") -> pd.DataFrame:
+    """The zone fractions of :func:`zone_table` without the bootstrap: ``f`` and ``n`` per zone."""
+    edges = np.array(ZONES)
+    s = s[s.group.isin(DEN[which])]
+    b = np.clip(np.digitize(s.semi_major_axis_au, edges) - 1, 0, len(edges) - 2)
+    nb = len(edges) - 1
+    num = np.bincount(b, s.w.values * s.group.isin(NUM[which]).values, nb)
+    den = np.bincount(b, s.w.values, nb)
+    return pd.DataFrame({"f": np.where(den > 0, num / np.maximum(den, 1e-300), np.nan), "n": np.bincount(b, None, nb)},
+                        index=ZONE_NAMES)
+
+
 def zone_table(samples: dict[str, pd.DataFrame], rng: np.random.Generator, which: str = "narrow") -> pd.DataFrame:
     """C-fraction per zone for every sample, formatted "f [lo–hi] (n=N)"."""
     rows = {}

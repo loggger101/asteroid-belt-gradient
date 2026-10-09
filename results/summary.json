@@ -619,6 +619,61 @@
       ]
     ]
   },
+  "sample_sizes": {
+    "raw": 161659,
+    "collapsed_ipw": 3786,
+    "collapsed_complete": 492,
+    "background_complete": 406,
+    "orbit_test": {
+      "S-like": 499,
+      "C-like": 1597
+    },
+    "measured_albedo": 142256,
+    "albedo_check_complete_background": 691
+  },
+  "albedo_by_group": {
+    "S-like": {
+      "n": 22518,
+      "median_pV": 0.244,
+      "frac_below_0.10": 0.127,
+      "frac_at_least_0.30": 0.2891
+    },
+    "K/L": {
+      "n": 3434,
+      "median_pV": 0.191,
+      "frac_below_0.10": 0.1523,
+      "frac_at_least_0.30": 0.154
+    },
+    "X": {
+      "n": 7944,
+      "median_pV": 0.081,
+      "frac_below_0.10": 0.5735,
+      "frac_at_least_0.30": 0.0369
+    },
+    "C-like": {
+      "n": 25993,
+      "median_pV": 0.062,
+      "frac_below_0.10": 0.8422,
+      "frac_at_least_0.30": 0.0116
+    },
+    "D/P": {
+      "n": 2008,
+      "median_pV": 0.1,
+      "frac_below_0.10": 0.499,
+      "frac_at_least_0.30": 0.0657
+    }
+  },
+  "snow_line_track": {
+    "first_inside_au_myr": {
+      "3.3": 1.41,
+      "2.5": 3.19,
+      "2.1": 5.31
+    },
+    "min_au": 1.78,
+    "age_at_min_myr": 12.7,
+    "au_at_track_start": 4.8,
+    "track_start_myr": 0.49
+  },
   "text_numbers": {
     "n_main_belt_by_label_tier": {
       "assumed": 1201743,
@@ -715,7 +770,7 @@
     "inner_mass_S_of_all_classified": 0.8912
   },
   "software": {
-    "beltgradient": "2.5.0",
+    "beltgradient": "2.6.0",
     "seed": 4045
   }
 }

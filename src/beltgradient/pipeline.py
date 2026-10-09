@@ -21,7 +21,7 @@ from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, CATALOG_RELEASE, D_IPW, EXT
 from .families import attach_families, extend_families, family_table, load_families, load_proper_elements
 from .figures import GROUP_ORDER, RCPARAMS
 from . import figures as F
-from .gradient import DEN, NUM, build_samples, collapsed, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, zone_point, zone_table
+from .gradient import DEN, NUM, build_samples, collapsed, crossover_table, inner_belt_by_size, mass_by_zone, sample_keys, size_distance_grid, zone_point, zone_table
 from .orbits import ks_only, orbit_sample, orbit_tests
 
 # output PNG for each figure, and its number in the paper. Every figure is saved at its drawn (print) size.
@@ -280,6 +280,12 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     # 9f · X-types split by measured albedo (point estimates: no RNG)
     xsplit = x_split_by_albedo(mb, fams, ftab, samples, keys, D_C)
 
+    # 9g · C/(S+C) of the IPW sample by a and D (Fig. 4; no RNG)
+    a_e, d_e, f_ad, n_ad = size_distance_grid(samples[keys[1]])
+    size_map = {"sample": keys[1], "a_edges_au": [float(v) for v in a_e],
+                "d_edges_km": [None if np.isinf(v) else float(v) for v in d_e],
+                "c_fraction": [[_round(v, 3) for v in row] for row in f_ad], "n": [[int(v) for v in row] for row in n_ad]}
+
     # 10 · summary numbers
     summary = {
         "catalog": {"release": CATALOG_RELEASE, "rows": int(len(cat)), "catalog_date": str(cat.catalog_date.iloc[0]), "pipeline_version": str(cat.pipeline_version.iloc[0]),
@@ -303,6 +309,7 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
             "orbit_tests_ks": ks_alt.round(5).to_dict(orient="records"),
         },
         "x_split_by_albedo": xsplit,
+        "size_distance_map": size_map,
         "text_numbers": text,
         "software": {"beltgradient": __version__, "seed": SEED},
     }

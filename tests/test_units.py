@@ -11,7 +11,7 @@ from beltgradient.config import H_EDGES, SNOW_LINE_AU, ZONE_NAMES
 from beltgradient.families import (V1AU, extend_families, family_table, load_families, load_proper_elements,
                                    zappala_distance, zappala_embedding)
 from beltgradient.fetch import download
-from beltgradient.gradient import c_fraction_curve, collapsed, fit_logistic, zone_point
+from beltgradient.gradient import c_fraction_curve, collapsed, fit_logistic, size_distance_grid, zone_point
 from beltgradient.orbits import ks_only, orbit_tests
 
 
@@ -213,3 +213,18 @@ def test_zone_point_is_the_weighted_zone_fraction():
     assert narrow.loc["inner", "f"] == pytest.approx(0.75) and narrow.loc["inner", "n"] == 2   # X ignored
     assert np.isnan(narrow.loc["middle", "f"]) and broad.loc["middle", "f"] == pytest.approx(1.0)
     assert narrow.loc["outer", "f"] == pytest.approx(0.5) and np.isnan(narrow.loc["pristine", "f"])
+
+
+def test_size_distance_grid():
+    # five S/C bodies in one cell (2.3-2.4 AU, 10-20 km), weighted; two in another; X ignored
+    s = pd.DataFrame({"semi_major_axis_au": [2.35] * 5 + [3.15, 3.15, 3.15],
+                      "diameter_km": [12, 15, 18, 19, 11, 150, 200, 120],
+                      "group": ["C-like", "S-like", "S-like", "C-like", "X", "C-like", "S-like", "C-like"],
+                      "w": [2.0, 1.0, 1.0, 2.0, 9.0, 1.0, 1.0, 1.0]})
+    a, d, f, n = size_distance_grid(s)
+    assert len(a) == 13 and d[-1] == np.inf and f.shape == n.shape == (4, 12)
+    assert n[0, 2] == 4 and np.isnan(f[0, 2])            # 4 S/C bodies < MIN_CELL: blank
+    s5 = pd.concat([s, s.iloc[[0]]])                       # a fifth S/C body fills the cell
+    _, _, f5, n5 = size_distance_grid(s5)
+    assert n5[0, 2] == 5 and f5[0, 2] == pytest.approx(6 / 8)    # C weight 2+2+2 of 2+1+1+2+2
+    assert n5[3, 10] == 3 and np.isnan(f5[3, 10])          # >= 100 km at 3.1-3.2 AU: 3 bodies, blank

@@ -6,8 +6,8 @@ authors:
   - family-names: Edwards
     given-names: Logan M.
     affiliation: "Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology"
-version: 2.2.0
-date-released: 2026-09-27
+version: 2.3.0
+date-released: 2026-10-09
 license: MIT
 repository-code: "https://github.com/loggger101/asteroid-belt-gradient"
 keywords:
@@ -22,10 +22,10 @@ references:
     authors:
       - family-names: Edwards
         given-names: Logan M.
-    version: "data-2026-09-27"
+    version: "data-2026-09-29c"
     repository-code: "https://github.com/loggger101/AsteroidCatalog"
-    url: "https://github.com/loggger101/AsteroidCatalog/releases/tag/data-2026-09-27"
-    notes: "The catalog release this analysis reads (data contract 1.6.0)."
+    url: "https://github.com/loggger101/AsteroidCatalog/releases/tag/data-2026-09-29c"
+    notes: "The catalog release this analysis reads (data contract 1.8.1)."
   - type: data
     title: "Nesvorný HCM asteroid families bundle"
     authors:

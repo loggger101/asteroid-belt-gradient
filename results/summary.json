@@ -1,10 +1,10 @@
 {
   "catalog": {
-    "release": "data-2026-09-27",
-    "rows": 1568641,
-    "catalog_date": "2026-09-27",
-    "pipeline_version": "1.6.0",
-    "main_belt": 1443536,
+    "release": "data-2026-09-29c",
+    "rows": 1568882,
+    "catalog_date": "2026-09-29",
+    "pipeline_version": "1.8.1",
+    "main_belt": 1443761,
     "taxonomy_tier": 161659
   },
   "families": {
@@ -380,7 +380,7 @@
   },
   "text_numbers": {
     "n_main_belt_by_label_tier": {
-      "assumed": 1201518,
+      "assumed": 1201743,
       "taxonomy": 161659,
       "albedo_proxy": 80359
     },
@@ -393,17 +393,17 @@
       "0.066": {
         "a_min": 2.82,
         "a_max": 3.27,
-        "n": 413129
+        "n": 413186
       },
       "0.086": {
         "a_min": 2.5,
         "a_max": 2.82,
-        "n": 456176
+        "n": 456280
       },
       "0.190": {
         "a_min": 2.1,
         "a_max": 2.5,
-        "n": 331684
+        "n": 331748
       }
     },
     "eos_family": {
@@ -423,7 +423,7 @@
         "diameter_km": 144.8
       }
     ],
-    "assumed_label_fraction": 0.8323,
+    "assumed_label_fraction": 0.8324,
     "taxonomy_tier_family_fraction": 0.3221,
     "families_with_main_belt_members": 240,
     "families_classifiable": 193,
@@ -474,7 +474,7 @@
     "inner_mass_S_of_all_classified": 0.8912
   },
   "software": {
-    "beltgradient": "2.2.0",
+    "beltgradient": "2.3.0",
     "seed": 4045
   }
 }

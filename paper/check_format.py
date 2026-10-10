@@ -21,6 +21,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = Path(__file__).resolve().parent
+PAPER = HERE   # the folder with main.tex and refs.bib; main() takes it from --paper
 UNITS = r"(?:au|km|Myr|Gyr|K|mag|kg)"
 BRITISH = r"\b(?:analysed|analysing|labelled|labelling|colours?|behaviours?|centres?|normalis\w*|favour\w*|modelled|modelling)\b"
 FIRST_PERSON = r"\b(?:I|me|my|we|us|our|We|Our|My)\b"
@@ -213,14 +214,36 @@ def check_build(tmp, compile_it=True):
             fail("latexmk not found on PATH; build with `latexmk -pdf -outdir=DIR main.tex` in paper/ "
                  "and pass --build-dir DIR, or use --no-build")
             return None
-        subprocess.run([exe, "-g", "-pdf", "-interaction=nonstopmode", f"-outdir={tmp}", "main.tex"],
-                       cwd=PAPER, capture_output=True, text=True, timeout=600)
-    log = (Path(tmp) / "main.log").read_text(encoding="latin-1") if (Path(tmp) / "main.log").exists() else ""
+        r = subprocess.run([exe, "-g", "-pdf", "-interaction=nonstopmode", f"-outdir={tmp}", "main.tex"],
+                           cwd=PAPER, capture_output=True, text=True, timeout=600)
+        if r.returncode != 0:
+            fail(f"latexmk exited with {r.returncode}: {(r.stdout + r.stderr).strip()[-400:]}")
+    logf, blgf = Path(tmp) / "main.log", Path(tmp) / "main.blg"
+    if not logf.exists():
+        fail(f"no main.log in {tmp}: the paper was not built there")
+        return None
+    log = logf.read_text(encoding="latin-1")
     if "Output written" not in log:
-        fail(f"no successful build in {tmp}; see main.log")
+        fail(f"no PDF written in {tmp}; see main.log")
         return None
     if (Path(tmp) / "main.pdf").stat().st_mtime < (PAPER / "main.tex").stat().st_mtime:
         fail("the build is older than main.tex; rebuild it")
+    check_log(log, blgf.read_text(encoding="latin-1") if blgf.exists() else None)
+    return Path(tmp) / "main.pdf"
+
+
+def check_log(log: str, blg: str | None) -> None:
+    """The LaTeX log and BibTeX log of a build. In nonstopmode LaTeX writes a PDF even after an error."""
+    for m in re.finditer(r"(?m)^! (.*)$", log):
+        line = re.search(r"(?m)^l\.(\d+)", log[m.end():m.end() + 2000])
+        fail(f"LaTeX error: {m.group(1)}" + (f" (main.tex line {line.group(1)})" if line else ""))
+    if blg is None:
+        fail("no main.blg: BibTeX did not run, so the references were not built")
+    else:
+        for m in re.findall(r"Warning--(.*)", blg):
+            fail(f"BibTeX: {m}")
+        for m in re.findall(r"(?m)^(I couldn't open .*|I found no .*|Repeated entry.*)$", blg):
+            fail(f"BibTeX: {m}")
     for pat, what in [(r"Reference `([^']+)' on page \d+ undefined", "undefined reference"),
                       (r"Citation `([^']+)' on page \d+ undefined", "undefined citation"),
                       (r"Label `([^']+)' multiply defined", "label defined twice"),
@@ -230,11 +253,6 @@ def check_build(tmp, compile_it=True):
                        "loose line (badness, main.tex lines)")]:
         for m in sorted(set(re.findall(pat, log))):
             fail(f"LaTeX: {what}: {m}")
-    blg = Path(tmp) / "main.blg"
-    if blg.exists():
-        for m in re.findall(r"Warning--(.*)", blg.read_text(encoding="latin-1")):
-            fail(f"BibTeX: {m}")
-    return Path(tmp) / "main.pdf"
 
 
 def check_pdf(pdf_path):
@@ -242,6 +260,14 @@ def check_pdf(pdf_path):
     pdf = pdfium.PdfDocument(str(pdf_path))
     pages = [pdf[i].get_textpage().get_text_range().replace("\r", "") for i in range(len(pdf))]
     print(f"PDF: {len(pages)} pages")
+    if not pages or not any(p.strip() for p in pages):
+        fail(f"{pdf_path} has no text")
+        return
+    check_pages(pages)
+
+
+def check_pages(pages: list[str]) -> None:
+    """The text of each PDF page, as pypdfium2 extracts it (a hyphen at a line end becomes U+FFFE)."""
     # bad line breaks: number | unit, label | number, a relation sign at a line break (prose lines only)
     for i, t in enumerate(pages, 1):
         for m in re.finditer(r"[—―]", t):   # includes dashes the class or the bst generate
@@ -288,20 +314,21 @@ def check_pdf(pdf_path):
             warn(f"{k} appears on p{p}, {p - first[k]} pages after its first mention (p{first[k]})")
 
 
-def main():
+def main(argv=None):
+    fails.clear(); warns.clear(); SURNAMES.clear()
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--no-build", action="store_true", help="source checks only")
     ap.add_argument("--build-dir", help="check an existing latexmk -outdir build instead of compiling")
     ap.add_argument("--paper", default=str(HERE), help="folder with main.tex and refs.bib (default: this one)")
     ap.add_argument("--repo", default=str(HERE.parent), help="repository root (default: the parent folder)")
     ap.add_argument("--untagged-ok", action="store_true", help="a cited release without a tag is a WARN, not a FAIL")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
     global PAPER, UNTAGGED_OK
     PAPER = Path(args.paper)
     UNTAGGED_OK = args.untagged_ok
     repo = Path(args.repo) if Path(args.repo, "src").exists() else None
     if repo is None:
-        warn(f"repo clone not found at {args.repo}: figure and version checks against it skipped")
+        fail(f"no repository at {args.repo} (no src/): the figure and version checks cannot run; pass --repo")
     tex = (PAPER / "main.tex").read_text(encoding="utf-8")
     bib = (PAPER / "refs.bib").read_text(encoding="utf-8")
     check_source(tex, bib, repo)

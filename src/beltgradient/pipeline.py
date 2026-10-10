@@ -6,7 +6,6 @@ result. Reordering them changes the bootstrap intervals (not the point estimates
 from __future__ import annotations
 
 import json
-import warnings
 from dataclasses import dataclass, field
 
 import matplotlib.pyplot as plt
@@ -62,8 +61,9 @@ def dp_share_outer(s: pd.DataFrame) -> pd.Series:
     """D/P share of a sample (normally the size-complete collapsed one) per 0.1 AU bin, from 2.9 AU outward (Fig. 5)."""
     edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
     st = (s[s.group.isin(GROUP_ORDER)].assign(bin=pd.cut(s.semi_major_axis_au, edges))
-          .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False).fillna(0))
-    dp = st.get("D/P", pd.Series(0.0, index=st.index)).div(st.sum(axis=1))
+          .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False)
+          .reindex(columns=GROUP_ORDER, fill_value=0.0).fillna(0.0))       # a group absent from a bin weighs 0
+    dp = st["D/P"].div(st.sum(axis=1))
     return dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
 
 
@@ -199,10 +199,8 @@ def _log(verbose, *a):
 
 
 def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True) -> Results:
-    """The whole analysis. Its Matplotlib style and warning filters apply to the run only, not to the caller."""
-    with warnings.catch_warnings(), plt.rc_context(RCPARAMS):
-        warnings.filterwarnings("ignore", category=FutureWarning)
-        warnings.filterwarnings("ignore", message="All-NaN slice")
+    """The whole analysis. Its Matplotlib style applies to the run only, not to the caller."""
+    with plt.rc_context(RCPARAMS):
         return _run(paths or Paths.default(), write, verbose)
 
 
@@ -358,7 +356,7 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
 
     if write:
         # "\n" on every platform, so a run reproduces the committed file byte for byte
-        (paths.results / "summary.json").write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8", newline="\n")
+        (paths.results / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8", newline="\n")
         _log(verbose, f"wrote {paths.results / 'summary.json'} and {len(FIGURE_FILES)} figures to {paths.figures}")
 
     return Results(

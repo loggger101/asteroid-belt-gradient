@@ -149,6 +149,15 @@ def _write(path, lines):
     path.write_bytes("".join(f"{s}\r\n" for s in lines).encode("ascii"))
 
 
+def _write_labelled(path, lines):
+    """A data file and its PDS4 label (byte size, record count), as every data file in the real bundle has."""
+    _write(path, lines)
+    path.with_suffix(".xml").write_text(
+        f"<Product_Observational><File><file_name>{path.name}</file_name>"
+        f"<file_size unit=\"byte\">{path.stat().st_size}</file_size><records>{len(lines)}</records></File>"
+        f"</Product_Observational>\n", encoding="utf-8")
+
+
 def _bundle(nesvorny, df: pd.DataFrame) -> None:
     data = nesvorny / "data"
     fam_lines = []
@@ -156,10 +165,10 @@ def _bundle(nesvorny, df: pd.DataFrame) -> None:
         fam_lines.append(f"{fid} {pnum} {name:<14} {cut:4d} {(df.fam == f'2015_{fid}').sum():7d} 2.2407 2.4897 0.0746 0.1333  5.37  7.75 -")
     fam_lines.insert(1, "007 James Bond           0       1 2.4739 2.4739 0.1282 0.1282  6.32  6.32 N")
     fam_lines.insert(4, "503 -                    0       0 -.9999 -.9999 -.9999 -.9999 -9.99 -9.99 N")
-    _write(data / "familylist.tab", fam_lines)
+    _write_labelled(data / "familylist.tab", fam_lines)
 
     def members_2015(fid, pnum, name, m):
-        _write(data / "families_2015" / f"{fid}_{name.lower()}.tab",
+        _write_labelled(data / "families_2015" / f"{fid}_{name.lower()}.tab",
                [f"{r.designation:>6} {r.a_p:.5f} {r.e_p:.5f} {r.sini_p:8.5f} {r.H:6.2f} {-1.0:6.2f} {fid:>5} {pnum} {name}"
                 for r in m.itertuples()])
 
@@ -173,13 +182,13 @@ def _bundle(nesvorny, df: pd.DataFrame) -> None:
     for stem, line, _, _, _ in FAMILIES_2024:
         doc.append(line)
         m = df[df.fam.eq(f"2024_{stem}")]
-        _write(data / "families_2024" / f"{stem}.csv",
+        _write_labelled(data / "families_2024" / f"{stem}.csv",
                [f"{r.a_p:.6f},{r.e_p:.6f},{r.sini_p:.6f},36.8,-40.0,{r.H:.3f},5,K00X00X,{r.designation.replace(' ', '')}"
                 for r in m.itertuples()])
     _write(nesvorny / "document" / "list_of_new_families_2024.txt", doc)
 
     pr = df[df.has_proper]
-    _write(data / "proper_catalog24.tab",
+    _write_labelled(data / "proper_catalog24.tab",
            [f"{r.a_p:.6f} 0.10E-03 {r.e_p:.6f} 0.10E-03 {r.sini_p:.6f} 0.10E-03   40.000000  -50.000000 {r.H:6.3f} 100 "
             f"{'K00X00X':>7} {r.designation.replace(' ', ''):<10}" for r in pr.itertuples()])
 

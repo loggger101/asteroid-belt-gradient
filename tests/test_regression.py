@@ -19,7 +19,7 @@ def test_full_run_reproduces_committed_summary():
     from beltgradient.pipeline import run
 
     committed = json.loads((paths.results / "summary.json").read_text())
-    got = json.loads(json.dumps(run(paths, write=False, verbose=False).summary, default=str))
+    got = json.loads(json.dumps(run(paths, write=False, verbose=False).summary))
     for key in committed:
         if key != "software":
             assert got[key] == committed[key], key

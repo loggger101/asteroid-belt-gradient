@@ -26,11 +26,58 @@ def _lines(path) -> list[str]:
         return f.readlines()
 
 
+def _label(xml: Path) -> dict:
+    t = xml.read_text(encoding="utf-8")
+    get = lambda tag: [int(v) for v in re.findall(rf"<{tag}[^>]*>\s*(\d+)\s*</{tag}>", t)]
+    return {"file_size": get("file_size"), "records": get("records")}
+
+
+def verify_bundle(nesvorny: Path) -> None:
+    """Every data file :func:`load_families` and :func:`load_proper_elements` read matches its PDS4 label.
+
+    The label next to each data file gives its size in bytes and its number of records (lines): a missing,
+    truncated or extra file raises, listing every problem, instead of silently changing the families.
+    """
+    data, problems = nesvorny / "data", []
+    files = [data / "familylist.tab", data / "proper_catalog24.tab"]
+    for sub_dir, ext in (("families_2015", ".tab"), ("families_2024", ".csv")):
+        d = data / sub_dir
+        if not d.is_dir():
+            problems.append(f"missing folder {d}")
+            continue
+        found, labelled = {p.stem for p in d.glob("*" + ext)}, {p.stem for p in d.glob("*.xml")}
+        problems += [f"{sub_dir}/{s}{ext} has no label" for s in sorted(found - labelled)]
+        problems += [f"{sub_dir}/{s}{ext} is missing (its label is there)" for s in sorted(labelled - found)]
+        files += [d / (s + ext) for s in sorted(found & labelled)]
+    doc = nesvorny / "document" / "list_of_new_families_2024.txt"
+    if not doc.is_file():
+        problems.append(f"missing {doc}")
+    for path in files:
+        xml = path.with_suffix(".xml")
+        if not path.is_file() or not xml.is_file():
+            problems.append(f"missing {path if not path.is_file() else xml}")
+            continue
+        lab = _label(xml)
+        if len(set(lab["file_size"])) != 1 or len(set(lab["records"])) != 1:
+            problems.append(f"{xml.name}: expected one file_size and one record count, found {lab}")
+            continue
+        raw = path.read_bytes()
+        n_lines = raw.count(b"\n")
+        if len(raw) != lab["file_size"][0] or n_lines != lab["records"][0]:
+            problems.append(f"{path.name}: {len(raw)} bytes and {n_lines} lines; its label says "
+                            f"{lab['file_size'][0]} bytes and {lab['records'][0]} records")
+    if problems:
+        raise ValueError(f"family bundle {nesvorny} does not match its labels:\n  " + "\n  ".join(problems))
+
+
 def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Return (families, members). A body listed in two families goes to the larger one."""
+    verify_bundle(nesvorny)
     data = nesvorny / "data"
 
     # ── 2015 families: list + members ───────────────────────────────────────
+    # familylist.tab also lists entries without a member file (e.g. "007 James Bond", "503 -"), whose
+    # lines lack the parent number; they are allowed only if no member file names them (checked below)
     fl_rows = []
     for line in _lines(data / "familylist.tab"):
         m = re.match(r"^(\d{3})\s+(\d+)\s+(.*?)\s+(\d+)\s+(\d+)\s+[\d.]+", line)
@@ -40,11 +87,18 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     mem = []
     for f in sorted(glob(str(data / "families_2015" / "*.tab"))):
-        for line in _lines(f):
+        for i, line in enumerate(_lines(f), 1):
             t = line.split()
-            if len(t) >= 7:
-                mem.append((t[0], f"2015_{t[6]}"))
+            if not t:
+                continue
+            if len(t) < 7:
+                raise ValueError(f"{Path(f).name} line {i}: {len(t)} fields, expected at least 7: {line.strip()!r}")
+            mem.append((t[0], f"2015_{t[6]}"))
     mem15 = pd.DataFrame(mem, columns=["key", "fam_id"])
+    listed, with_members = set(fams15.fam_id), set(mem15.fam_id)
+    if listed != with_members:
+        raise ValueError(f"familylist.tab and the 2015 member files disagree: listed without members "
+                         f"{sorted(listed - with_members)}, members of unlisted families {sorted(with_members - listed)}")
 
     # ── 2024 families: cutoffs from the document list, members from csvs ────
     # A numbered parent is listed by number ("177 Irma  ..."); an unnumbered one as "-- 2012 PM61  ...",
@@ -55,22 +109,28 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         if m:
             key = m[1] if m[1] != "--" else m[2].replace(" ", "").lower()
             cut24[key] = (m[2], float(m[3]))
-    rows, mem = [], []
+    rows, mem, used = [], [], set()
     for f in sorted(glob(str(data / "families_2024" / "*.csv"))):
         stem = Path(f).stem                       # e.g. middle_177_irma_fam3
         parts = stem.split("_")
         pnum = parts[1]
-        name, cut = cut24.get(pnum if pnum != "0" else parts[2], (parts[2], np.nan))
+        key = pnum if pnum != "0" else parts[2]
+        if key not in cut24:
+            raise ValueError(f"families_2024/{stem}.csv has no line (and no HCM cutoff) in list_of_new_families_2024.txt")
+        used.add(key)
+        name, cut = cut24[key]
         fid = f"2024_{stem}"
         rows.append(dict(fam_id=fid, parent_num=pnum, fam_name=name, cutoff=cut))
         x = pd.read_csv(f, header=None, dtype=str)
         mem += [(k, fid) for k in x[8]]
+    if set(cut24) != used:
+        raise ValueError(f"list_of_new_families_2024.txt lists families without a member file: {sorted(set(cut24) - used)}")
     fams24 = pd.DataFrame(rows)
     mem24 = pd.DataFrame(mem, columns=["key", "fam_id"])
 
     fams = pd.concat([fams15, fams24], ignore_index=True)
-    assert fams.fam_id.is_unique, fams.fam_id[fams.fam_id.duplicated()].tolist()
-    assert fams.cutoff.notna().all(), fams.fam_id[fams.cutoff.isna()].tolist()   # every family needs its HCM cutoff
+    if not fams.fam_id.is_unique:
+        raise ValueError(f"family ids listed twice: {fams.fam_id[fams.fam_id.duplicated()].tolist()}")
     members = pd.concat([mem15, mem24], ignore_index=True)
     members["key"] = norm_key(members["key"])
     fams["n_listed"] = fams.fam_id.map(members.fam_id.value_counts()).fillna(0).astype(int)
@@ -88,15 +148,21 @@ def load_proper_elements(nesvorny: Path) -> pd.DataFrame:
     pc = pd.read_csv(nesvorny / "data" / "proper_catalog24.tab", sep=r"\s+", header=None, dtype={10: str, 11: str},
                      usecols=[0, 2, 4, 8, 11], names=["a_p", "e_p", "sini_p", "H_p", "key"])
     pc["key"] = norm_key(pc["key"])
-    return pc.drop_duplicates("key")
+    if not pc.key.is_unique:
+        raise ValueError(f"proper_catalog24.tab lists {int(pc.key.duplicated().sum())} designations twice, "
+                         f"e.g. {pc.key[pc.key.duplicated()].head(5).tolist()}")
+    return pc
 
 
 def attach_families(mb: pd.DataFrame, members: pd.DataFrame, pc: pd.DataFrame) -> pd.DataFrame:
     """Add ``fam_id``, ``in_family`` and proper elements (``a_p``, ``e_p``, ``sini_p``) to the main belt."""
-    mb = mb.drop(columns=[c for c in ["fam_id", "a_p", "e_p", "sini_p"] if c in mb], errors="ignore")
+    for name, keys in (("main belt", mb.key), ("family members", members.key), ("proper elements", pc.key)):
+        if not keys.is_unique:
+            raise ValueError(f"{name}: designations not unique, e.g. {keys[keys.duplicated()].head(5).tolist()}")
+    mb = mb.drop(columns=[c for c in ["fam_id", "a_p", "e_p", "sini_p"] if c in mb])
     mb = mb.merge(members[["key", "fam_id"]], on="key", how="left").merge(pc[["key", "a_p", "e_p", "sini_p"]], on="key", how="left")
     mb["in_family"] = mb.fam_id.notna()
-    return mb.drop_duplicates("key").reset_index(drop=True)
+    return mb.reset_index(drop=True)
 
 
 V1AU = 0.01720209895 * 1.49597870e11 / 86400      # circular speed at 1 AU, m/s, as hcluster.c derives it

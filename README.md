@@ -1,8 +1,8 @@
 # asteroid-belt-gradient
 
-Analysis code for L. M. Edwards (2026), **"Constraints on the Origin of the Asteroid Belt's Compositional Gradient from Debiased Taxonomic Data"** (Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology).
+Analysis code and paper for L. M. Edwards (2026), **"Constraints on the Origin of the Asteroid Belt's Compositional Gradient from Debiased Taxonomic Data"** (Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology).
 
-If asteroids formed where they are today, the main belt should switch sharply from dry S-types to hydrated C-types at the nebular snow line near 2.7 au. This package tests that against the 161,659 main-belt asteroids with a published taxonomy in the AsteroidCatalog release `data-2026-09-29c`, after collapsing collisional families and correcting for the brightness bias that favors S-types. It regenerates every figure and every data-derived number in the paper from two public inputs.
+If asteroids formed where they are today, the main belt should switch sharply from dry S-types to hydrated C-types at the nebular snow line near 2.7 au. This package tests that against the 161,659 main-belt asteroids with a published taxonomy in the AsteroidCatalog release `data-2026-09-29c`, after collapsing collisional families and correcting for the brightness bias that favors S-types. It regenerates every figure and every data-derived number in the paper from two public inputs, and the paper compiles from them ([`paper/`](paper/)).
 
 | | inner (2.1–2.5 au) | middle | pristine | outer (–3.3 au) |
 |---|---|---|---|---|
@@ -22,14 +22,14 @@ belt-gradient fetch   # ~280 MB: AsteroidCatalog release + Nesvorný families, s
 belt-gradient run     # ~1.5 min: rewrites figures/ and results/summary.json
 ```
 
-`python -m beltgradient ...` works the same without the console script. A run is deterministic (one RNG seeded with 4045): with the pinned inputs it reproduces the committed `summary.json` bit for bit, and the figures too under Matplotlib 3.11.1, the version that drew them (each PNG records it). `pytest` runs the fast tests (about 15 s), which include a full run of the pipeline and the CLI on small synthetic inputs whose true crossover is known; `pytest -m slow` also does the full run on the real inputs and checks it against the committed summary. CI runs the fast tests on Linux and Windows, and the full run on every pull request and push to main (`.github/workflows/reproduce.yml`), so a dependency release that moves a published number shows up at the next change.
+`python -m beltgradient ...` works the same without the console script. A run is deterministic (one RNG seeded with 4045): with the pinned inputs it reproduces the committed `summary.json` bit for bit, and the figures too under Matplotlib 3.11.1, the version that drew them (each PNG records it). `pytest` runs the fast tests (about 15 s), which include a full run of the pipeline and the CLI on small synthetic inputs whose true crossover is known; `pytest -m slow` also does the full run on the real inputs and checks it against the committed summary. On every pull request and push to main, CI runs the fast tests on Linux and Windows (`tests.yml`), the full run on the real inputs (`reproduce.yml`) and the paper build (`paper.yml`), so a dependency release that moves a published number shows up at the next change.
 
 `python examples/walkthrough.py` steps through the same analysis and prints the intermediate tables (families, completeness, zone fractions, crossover, orbit tests, robustness checks) without overwriting the committed outputs.
 
 ## The paper
 
-The paper itself is in [`paper/`](paper/) (AASTeX 7). It reads its figures straight from `figures/`, so after a run
-it compiles with the new ones:
+[`paper/`](paper/) holds the paper (AASTeX 7). It reads its figures straight from `figures/`, so after a run it
+compiles with the new ones:
 
 ```bash
 cd paper
@@ -37,8 +37,8 @@ latexmk -pdf main.tex   # needs pdfLaTeX, BibTeX and latexmk
 python -I check_format.py --build-dir .   # the formatting standards; needs pypdfium2
 ```
 
-CI compiles it on every pull request and push to main and attaches the PDF to the run (`paper.yml`, artifact
-`paper-pdf`). [`paper/README.md`](paper/README.md) lists the formatting standards the check enforces.
+CI attaches the compiled PDF to every `paper.yml` run (artifact `paper-pdf`). [`paper/README.md`](paper/README.md)
+lists the formatting standards the check enforces.
 
 ## Layout
 

@@ -18,7 +18,7 @@ from .albedo import DARK_ALBEDO, with_measured_albedo
 from .bhac15 import TRACK_1MSUN
 from .catalog import load_catalog, main_belt, split_x_by_albedo
 from .completeness import add_h_bins, add_ipw_weights, complete_limit, completeness, diameter_limit
-from .config import A_MAX, A_MIN, BHAC15_1MSUN_LOGL, CATALOG_RELEASE, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, X_SPLIT_ALBEDO, ZONE_NAMES, Paths
+from .config import A_MAX, A_MIN, BHAC15_QUOTED_LOG_T, CATALOG_RELEASE, D_IPW, EXTEND_FAMILIES, P_DARKEST, SEED, SNOW_LINE_AU, X_SPLIT_ALBEDO, ZONE_NAMES, Paths
 from .families import attach_families, extend_families, family_table, load_families, load_proper_elements
 from .figures import GROUP_ORDER, RCPARAMS
 from . import figures as F
@@ -58,6 +58,15 @@ def _weighted_c_fraction(s: pd.DataFrame, w: str, lo: float, hi: float, which: s
     return round(float((s[w] * s.group.isin(NUM[which])).sum() / s[w].sum()), 4) if len(s) else None
 
 
+def dp_share_outer(s: pd.DataFrame) -> pd.Series:
+    """D/P share of a sample (normally the size-complete collapsed one) per 0.1 AU bin, from 2.9 AU outward (Fig. 5)."""
+    edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
+    st = (s[s.group.isin(GROUP_ORDER)].assign(bin=pd.cut(s.semi_major_axis_au, edges))
+          .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False).fillna(0))
+    dp = st.get("D/P", pd.Series(0.0, index=st.index)).div(st.sum(axis=1))
+    return dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
+
+
 def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> dict:
     """Every data-derived number the paper quotes in running text that is not already a table entry.
 
@@ -71,13 +80,7 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
     top4 = t_mass.nlargest(4, "estimated_mass_kg")
     mz = mass_by_zone(t_mass, GROUP_ORDER)
 
-    # D/P share of the size-complete collapsed sample per 0.1 AU bin, from 2.9 AU outward (Fig. 5)
-    col = samples[keys[2]]
-    edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
-    st = (col[col.group.isin(GROUP_ORDER)].assign(bin=pd.cut(col.semi_major_axis_au, edges))
-          .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False).fillna(0))
-    dp = st["D/P"].div(st.sum(axis=1))
-    dp_outer = dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
+    dp_outer = dp_share_outer(samples[keys[2]])
 
     # IPW on a brightness-limited sample (H < H_IPW_MAX, no size cut): the S-biased alternative §3.4 rejects
     h_lim = collapsed(mb, ftab)
@@ -120,7 +123,8 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "measured_share_of_classified_mass": round(float(t_mass.estimated_mass_kg[t_mass.mass_measured.astype(bool)].sum() / t_mass.estimated_mass_kg.sum()), 4),
         "mass_share_of_classified": dict(zip(top4.name, (top4.estimated_mass_kg / t_mass.estimated_mass_kg.sum()).round(4))),
         "inner_mass_S_of_S_plus_C": round(float(mz.loc["inner", "S-like"] / (mz.loc["inner", "S-like"] + mz.loc["inner", "C-like"])), 4),
-        "snow_line_au_on_bhac15_1msun_track": {age: round(SNOW_LINE_AU * 10 ** (logl / 2), 2) for age, logl in BHAC15_1MSUN_LOGL.items()},
+        "snow_line_au_on_bhac15_1msun_track": {f"{10 ** t / 1e6:.1f} Myr": round(SNOW_LINE_AU * 10 ** (logl / 2), 2)
+                                               for t, logl in TRACK_1MSUN if t in BHAC15_QUOTED_LOG_T},
         "inner_mass_S_of_all_classified": round(float(mz.loc["inner", "S-like"] / mz.loc["inner"].sum()), 4),
     }
 
@@ -150,12 +154,7 @@ def x_split_by_albedo(mb, fams, ftab, samples, keys, d_c) -> dict:
     def max_change(which):
         return _round(max(abs(zone_point(sx[k], which).f - zone_point(samples[k], which).f).max() for k in keys))
 
-    col = sx[keys[2]]
-    edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
-    st = (col[col.group.isin(GROUP_ORDER)].assign(bin=pd.cut(col.semi_major_axis_au, edges))
-          .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False).fillna(0))
-    dp = st.get("D/P", pd.Series(0.0, index=st.index)).div(st.sum(axis=1))
-    dp_outer = dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
+    dp_outer = dp_share_outer(sx[keys[2]])
     return {
         "albedo_cuts_P_M_E": list(X_SPLIT_ALBEDO),
         "n_taxonomy_X_group": int(len(tax_x)),

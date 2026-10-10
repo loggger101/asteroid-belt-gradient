@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this code, please cite it as below."
-title: "asteroid-belt-gradient: is the asteroid belt's compositional gradient primordial?"
+title: "asteroid-belt-gradient: constraints on the origin of the asteroid belt's compositional gradient from debiased taxonomic data"
 type: software
 authors:
   - family-names: Edwards

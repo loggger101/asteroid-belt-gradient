@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "beltgradient"
 dynamic = ["version"]
-description = "Is the asteroid belt's S/C compositional gradient primordial? Family-collapsed, completeness-debiased analysis of the main belt."
+description = "Family-collapsed, completeness-debiased analysis of the asteroid belt's S/C compositional gradient (Edwards 2026)."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Logan M. Edwards" }]

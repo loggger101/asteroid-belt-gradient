@@ -6,8 +6,8 @@ every edit to the paper:
     python -I check_format.py            (from paper/; needs latexmk and pypdfium2)
     python -I check_format.py --no-build (source checks only, no compile)
 
-FAIL lines break a standard; WARN lines are worth a look but are known to occur (e.g. floats that
-land a few pages after their first mention because Section 4 cites six figures on one page).
+FAIL lines break a standard; WARN lines are worth a look (e.g. a float that lands more than three pages
+after its first mention, or a cited release not yet tagged under --untagged-ok).
 Exit status 1 if anything FAILs. The script never writes into paper/: it compiles in a temporary
 folder. --untagged-ok turns the missing-tag FAIL into a WARN (CI: the tag is made after the merge).
 """

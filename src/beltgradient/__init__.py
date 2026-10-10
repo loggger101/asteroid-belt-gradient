@@ -1,4 +1,4 @@
-"""Is the asteroid belt's S→C compositional gradient primordial, or the product of mixing and implantation?
+"""The asteroid belt's S→C compositional gradient, with collisional families collapsed and the brightness bias removed.
 
 Analysis code for Edwards (2026), "Constraints on the Origin of the Asteroid Belt's Compositional Gradient
 from Debiased Taxonomic Data". ``python -m beltgradient fetch`` downloads the inputs;

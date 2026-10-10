@@ -230,9 +230,9 @@ def test_size_distance_grid():
     assert n5[3, 10] == 3 and np.isnan(f5[3, 10])          # >= 100 km at 3.1-3.2 AU: 3 bodies, blank
 
 
-def test_bhac15_track_matches_the_quoted_luminosities():
+def test_bhac15_track_holds_the_quoted_rows():
     from beltgradient.bhac15 import TRACK_1MSUN
-    from beltgradient.config import BHAC15_1MSUN_LOGL
+    from beltgradient.config import BHAC15_QUOTED_LOG_T
     track = dict(TRACK_1MSUN)
     assert len(TRACK_1MSUN) == 198 and all(a < b for (a, _), (b, _) in zip(TRACK_1MSUN, TRACK_1MSUN[1:]))
-    assert track[6.001799] == BHAC15_1MSUN_LOGL["1.0 Myr"] and track[6.703958] == BHAC15_1MSUN_LOGL["5.1 Myr"]
+    assert [track[t] for t in BHAC15_QUOTED_LOG_T] == [0.285, -0.198]   # log L/L_sun at 1.0 and 5.1 Myr

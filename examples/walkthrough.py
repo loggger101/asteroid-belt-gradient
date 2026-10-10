@@ -69,7 +69,7 @@ def main():
 
     section("S/C crossover",
             f"Logistic fit P(C | a); a50 and 10->90% width with 16–84% bootstrap intervals. "
-            f"Snow line (T_eq = 170 K): {S['snow_line_au']} AU.")
+            f"Snow line (T_eq = 170 K): {S['snow_line_au']} au.")
     print(T["crossover"].astype(float).round(3).to_string())
 
     section("Orbital excitation", "Background bodies with D >= 10 km; KS per zone and element, Bonferroni over 8 tests.")
@@ -83,7 +83,7 @@ def main():
     ext = S["family_extension_toggled"]
     section("Robustness: one-step family extension (aggressive upper bound on missed members)")
     print(f"family fraction {S['families']['family_fraction']:.3f} -> {ext['family_fraction']:.3f}")
-    print(f"max change in a zone fraction: {ext['max_abs_change_zone_fraction']}, in a50: {ext['max_abs_change_a50_au']} AU\n")
+    print(f"max change in a zone fraction: {ext['max_abs_change_zone_fraction']}, in a50: {ext['max_abs_change_a50_au']} au\n")
     print(T["zone_narrow_extended"].to_string())
     print("\norbit test on the extended background (KS only):")
     print(T["orbit_ks_extended"].round(4).to_string())

@@ -62,9 +62,3 @@ Without that, Figures 4 and 5 and Tables 2 and 3 all piled onto one page with si
 is added or cut, recheck where the floats land. A heading line break is written `\\*`, never `\\` (in a
 centered heading `\\` ends a paragraph, and the heading can split across columns).
 The check does not replace looking at the rendered pages that changed.
-
-## History
-
-The paper moved into this repository on 2026-10-10. It was created on 2026-10-09 from the earlier Word draft and verified against it (text, every number, link,
-reference and figure). The Word draft, its LaTeX copy in the Word layout and the conversion scripts were
-deleted the same day, once the AASTeX file became the only version.

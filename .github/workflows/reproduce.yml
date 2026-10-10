@@ -1,7 +1,7 @@
 name: reproduce
 
-# The full run on the real inputs against the committed results/summary.json (`pytest -m slow`), plus the
-# fast tests. `belt-gradient fetch` downloads the AsteroidCatalog release and the Nesvorný bundle (~280 MB,
+# The full run on the real inputs against the committed results/summary.json (`pytest -m slow`); the fast
+# tests are in tests.yml. `belt-gradient fetch` downloads the AsteroidCatalog release and the Nesvorný bundle (~280 MB,
 # sha256-checked); they are cached under a key that changes whenever fetch.py's URLs or checksums do.
 # Each run installs the current NumPy, SciPy and pandas, so a release that moves a published number
 # shows up at the next pull request.
@@ -33,7 +33,7 @@ jobs:
       - name: Fetch
         run: belt-gradient fetch
       - name: Full run against the committed summary
-        run: pytest -q -m "slow or not slow"
+        run: pytest -q -m slow
       - name: Versions used
         if: always()
         run: pip list --format=freeze | grep -iE "^(numpy|pandas|scipy|matplotlib|pyarrow)=="

@@ -10,3 +10,14 @@ venv/
 
 # Inputs are fetched, not committed: `belt-gradient fetch` downloads and sha256-checks them.
 data/
+
+# LaTeX build products: compile the paper with `latexmk -pdf main.tex` in paper/ (CI uploads the PDF)
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.synctex.gz
+paper/main.pdf

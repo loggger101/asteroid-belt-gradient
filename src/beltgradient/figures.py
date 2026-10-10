@@ -64,7 +64,7 @@ def completeness_plot(comp: pd.DataFrame, h_c: float, d_c: float):
         ax.plot(mids, comp[z], color=ZONE_COLORS[z], lw=1.1, label=z)
     ax.axhline(COMPLETE_FRAC, color=INK2, ls=":", lw=.6)
     ax.axvline(h_c, color=COLORS["S-like"], lw=.8)
-    ax.text(h_c + .15, .08, f"$H_c$ = {h_c}\n$D_c$ ≈ {d_c:.0f} km", color=COLORS["S-like"], fontsize=6)
+    ax.text(h_c + .15, .08, f"$H_\\mathrm{{c}}$ = {h_c}\n$D_\\mathrm{{c}}$ ≈ {d_c:.0f} km", color=COLORS["S-like"], fontsize=6)
     ax.set(xlabel="absolute magnitude H", ylabel="fraction with a published taxonomy", xlim=(5, 18.5), ylim=(0, 1.03))
     ax.legend(loc="lower left")
     return fig
@@ -89,7 +89,7 @@ def c_fraction_panels(samples: dict[str, pd.DataFrame], panel_keys: list[str], r
     axes[0].set_ylabel("carbonaceous fraction")
     axes[0].plot([], [], color=COLORS["C-like"], lw=1.3, label="narrow, C/(S+C), 16–84% band")
     axes[0].plot([], [], color=COLORS["K/L"], lw=.9, ls="--", label="broad, (C+D/P+K/L)/(all but X)")
-    axes[0].plot([], [], color=SNOW, lw=.8, ls="--", label=f"snow line, $T_{{eq}}$ = 170 K ({SNOW_LINE_AU:.2f} au)")
+    axes[0].plot([], [], color=SNOW, lw=.8, ls="--", label=f"snow line, $T_\\mathrm{{eq}}$ = 170 K ({SNOW_LINE_AU:.2f} au)")
     fig.legend(*axes[0].get_legend_handles_labels(), loc="outside lower center", ncol=3)   # below, clear of the data
     return fig
 
@@ -168,7 +168,7 @@ def dark_fraction(alb: pd.DataFrame, d_ca: float, rng: np.random.Generator):
         ax.fill_between(x[k], lo[k], hi[k], color=c, alpha=.2, lw=0)
         ax.plot(x[k], f[k], color=c, lw=1.2, label=f"{lab} (n = {len(d):,})")
     mark_structure(ax)
-    ax.set(xlabel="semimajor axis a (au)", ylabel="fraction with $p_V$ < 0.10", ylim=(0, 1), xlim=(A_MIN, A_MAX))
+    ax.set(xlabel="semimajor axis a (au)", ylabel="fraction with $p_\\mathrm{V}$ < 0.10", ylim=(0, 1), xlim=(A_MIN, A_MAX))
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center")
     return fig
 
@@ -285,7 +285,7 @@ def proper_element_map(mb: pd.DataFrame, orb: pd.DataFrame, ftab: pd.DataFrame):
                         ha="center", va="center", zorder=3,
                         bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=.75))
     mark_structure(ax, snow=False)
-    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, top_i), xlabel="proper semimajor axis $a_P$ (au)", ylabel="proper sin $i_P$")
+    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, top_i), xlabel="proper semimajor axis $a_\\mathrm{P}$ (au)", ylabel="proper sin $i_\\mathrm{P}$")
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=3, markerscale=3.5, handletextpad=.3,
                title=f"background bodies, D ≥ {D_ORBIT:.0f} km:", title_fontsize=6, alignment="left")
     return fig
@@ -316,7 +316,7 @@ def robustness_summary(summary: dict, keys: list[str]):
             ("broad, D ≥ 53 km", {z: _cell(bro[z][col]) for z in ZONE_NAMES}, False),
             ("broad, dark X as P, IPW", point({z: xs[ipw][z] for z in ZONE_NAMES}), False),
             ("broad, dark X as P, D ≥ 53 km", point({z: xs[col][z] for z in ZONE_NAMES}), False),
-            ("albedo only, $p_V$ < 0.10, D ≥ 33 km", point(dark), False)]
+            ("albedo only, $p_\\mathrm{V}$ < 0.10, D ≥ 33 km", point(dark), False)]
     fig, ax = _fig(COL_W, 3.15)
     ys, labs, main = [], [], []
     y = 0.0
@@ -453,7 +453,7 @@ def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
     ax.text(cuts[1] * 1.04, .99, f"X: M | E ({cuts[1]:.2f})", transform=ax.get_xaxis_transform(), va="top", fontsize=5.5,
             color=INK2)
     ax.set_xticks([.01, .02, .05, .1, .2, .5, 1], ["0.01", "0.02", "0.05", "0.1", "0.2", "0.5", "1"])
-    ax.set(xlim=(.01, 1), xlabel="measured geometric albedo $p_V$", ylabel="probability density")
+    ax.set(xlim=(.01, 1), xlabel="measured geometric albedo $p_\\mathrm{V}$", ylabel="probability density")
     ax.set_yticks([])
     ax.spines["left"].set_visible(False)
     ax.legend(loc="center right", handlelength=1.2)

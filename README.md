@@ -26,6 +26,20 @@ belt-gradient run     # ~1.5 min: rewrites figures/ and results/summary.json
 
 `python examples/walkthrough.py` steps through the same analysis and prints the intermediate tables (families, completeness, zone fractions, crossover, orbit tests, robustness checks) without overwriting the committed outputs.
 
+## The paper
+
+The paper itself is in [`paper/`](paper/) (AASTeX 7). It reads its figures straight from `figures/`, so after a run
+it compiles with the new ones:
+
+```bash
+cd paper
+latexmk -pdf main.tex   # needs pdfLaTeX, BibTeX and latexmk
+python -I check_format.py --build-dir .   # the formatting standards; needs pypdfium2
+```
+
+CI compiles it on every pull request and push to main and attaches the PDF to the run (`paper.yml`, artifact
+`paper-pdf`). [`paper/README.md`](paper/README.md) lists the formatting standards the check enforces.
+
 ## Layout
 
 ```
@@ -44,6 +58,7 @@ figures/           committed outputs
 results/           summary.json: every number the paper derives from the data
 tests/             fast unit tests; conftest.py builds the synthetic inputs; -m slow: the real run
 examples/          walkthrough.py: the analysis stage by stage
+paper/             the paper: main.tex, refs.bib, the AASTeX class files, check_format.py
 ```
 
 ### Paper figure ↔ file
@@ -122,4 +137,4 @@ See [`CITATION.cff`](CITATION.cff). The paper cites release **v2.6.3**, which re
 
 ## License
 
-MIT for the code. The input data keep their own terms (PDS SBN; the AsteroidCatalog's sources).
+MIT for the code. The input data keep their own terms (PDS SBN; the AsteroidCatalog's sources). The AASTeX 7.0.1 class and bibliography styles in `paper/` come from CTAN under the LaTeX Project Public License 1.3c; `aasjournalv7tie.bst` is a renamed, modified copy, as that license asks.

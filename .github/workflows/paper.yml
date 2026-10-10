@@ -1,0 +1,42 @@
+name: paper
+
+# Compiles the paper (paper/main.tex) against the committed figures, runs its formatting check, and
+# attaches the PDF to the run (artifact "paper-pdf"). The check runs with --untagged-ok: a version bump
+# is tagged after its pull request merges, so a missing tag is only a warning here.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install TeX Live and the check's PDF reader
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends latexmk cm-super texlive-latex-base \
+            texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-plain-generic
+          python -m pip install --upgrade pip
+          pip install pypdfium2
+      - name: Compile
+        working-directory: paper
+        run: latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+      - name: Formatting check
+        working-directory: paper
+        run: python -I check_format.py --build-dir . --untagged-ok
+      - name: Upload the PDF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-pdf
+          path: |
+            paper/main.pdf
+            paper/main.log
+          if-no-files-found: warn

@@ -258,7 +258,7 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     # 6 · by mass (family collapse conserves mass, so all labelled bodies)
     t = mb[mb.tier.eq("taxonomy") & mb.estimated_mass_kg.notna() & mb.group.isin(GROUP_ORDER)]
     big4 = set(t.nlargest(4, "estimated_mass_kg").index)
-    mass_panels = [("all labelled bodies", t), ("without the 4 most massive", t.drop(index=list(big4)))]
+    mass_panels = [("all classified bodies", t), ("without the 4 most massive", t.drop(index=list(big4)))]
     save("mass", F.mass_bars(mass_panels))
     mass_c = {}
     for lab, d in zip(["all", "no_big4"], [p[1] for p in mass_panels]):

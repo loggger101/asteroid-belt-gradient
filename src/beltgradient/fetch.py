@@ -15,6 +15,7 @@ from pathlib import Path
 
 from . import __version__
 from .config import CATALOG_RELEASE, Paths
+from .families import verify_bundle
 
 CATALOG_URL = f"https://github.com/loggger101/AsteroidCatalog/releases/download/{CATALOG_RELEASE}/asteroid_catalog.parquet"
 CATALOG_SHA256 = "227b5e06a8a9a01f83b607bc6ccc054823bd5475edbe59feb7d40a6d0354f3f7"
@@ -53,7 +54,8 @@ def fetch(paths: Paths | None = None, keep_zip: bool = False) -> None:
     paths = paths or Paths.default()
     paths.data.mkdir(parents=True, exist_ok=True)
     download(CATALOG_URL, paths.catalog, CATALOG_SHA256)
-    if (paths.nesvorny / "data" / "proper_catalog24.tab").exists():
+    if paths.nesvorny.exists():
+        verify_bundle(paths.nesvorny)               # raises, naming every missing or altered file
         print(f"ok        {paths.nesvorny.name}/")
         return
     z = paths.data / "nesvorny_families_v2.zip"
@@ -61,6 +63,7 @@ def fetch(paths: Paths | None = None, keep_zip: bool = False) -> None:
     with zipfile.ZipFile(z) as zf:
         top = {n.split("/")[0] for n in zf.namelist()}
         zf.extractall(paths.data if top == {paths.nesvorny.name} else paths.nesvorny)
+    verify_bundle(paths.nesvorny)
     if not keep_zip:
         z.unlink()
     print(f"extracted {paths.nesvorny}")

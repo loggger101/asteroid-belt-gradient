@@ -109,3 +109,78 @@ def test_cli_reproduces_the_run_byte_for_byte(result, tmp_path):
     assert "D≥10 km" in p.stdout.decode("utf-8")
     for f in OUTPUTS:
         assert (tmp_path / f).read_bytes() == (result.paths.root / f).read_bytes(), f
+
+
+# ── the summary is plain JSON: nothing is stringified to make it fit ─────────────────────────────
+
+def test_summary_json_has_no_stringified_numbers(result):
+    summary = result.summary
+
+    def walk(o):
+        if isinstance(o, dict):
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+        elif isinstance(o, str):
+            assert not o.replace(".", "", 1).lstrip("-").isdigit(), f"number stored as a string: {o!r}"
+    walk(summary)
+
+
+# ── the command line, in process ─────────────────────────────────────────────────────────────────
+
+def test_cli_version_and_usage_errors(capsys):
+    from beltgradient.__main__ import main
+    with pytest.raises(SystemExit) as e:
+        main(["--version"])
+    assert e.value.code == 0 and capsys.readouterr().out.strip() == beltgradient.__version__
+    with pytest.raises(SystemExit) as e:
+        main([])                                         # a command is required
+    assert e.value.code == 2
+    with pytest.raises(SystemExit) as e:
+        main(["publish"])                                # and must be one it knows
+    assert e.value.code == 2
+
+
+def test_cli_run_no_write_leaves_the_root_empty(result, tmp_path, monkeypatch):
+    from beltgradient.__main__ import main
+    monkeypatch.setenv("BELT_GRADIENT_DATA", str(result.paths.data))
+    main(["--root", str(tmp_path), "run", "--no-write"])
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_cli_run_with_missing_inputs_raises(tmp_path, monkeypatch):
+    from beltgradient.__main__ import main
+    monkeypatch.delenv("BELT_GRADIENT_DATA", raising=False)
+    with pytest.raises(FileNotFoundError):
+        main(["--root", str(tmp_path), "run", "--no-write"])
+
+
+def test_paths_default_is_the_repository():
+    from beltgradient.config import Paths
+    assert (Paths.default().root / "pyproject.toml").is_file()
+
+
+def test_the_family_extension_option_runs(result, monkeypatch):
+    from beltgradient import pipeline
+    monkeypatch.setattr(pipeline, "EXTEND_FAMILIES", True)
+    monkeypatch.delenv("BELT_GRADIENT_DATA", raising=False)
+    ext = run(result.paths, write=False, verbose=False).summary
+    base = result.summary["families"]
+    assert ext["families"]["extension_used"] is True and base["extension_used"] is False
+    assert ext["families"]["family_fraction"] > base["family_fraction"]
+
+
+def test_the_robustness_figure_refuses_a_missing_estimate(result):
+    import copy
+    from beltgradient import figures
+    s = copy.deepcopy(result.summary)
+    keys = list(s["zone_c_fraction_narrow"]["inner"])
+    s["dark_fraction_complete"]["outer"] = None
+    with pytest.raises(ValueError, match="no outer-zone estimate for 'albedo only"):
+        figures.robustness_summary(s, keys)
+    s = copy.deepcopy(result.summary)
+    s["zone_c_fraction_narrow"]["pristine"][keys[0]] = "nan [nan–nan] (n=0)"
+    with pytest.raises(ValueError, match="not a zone fraction"):
+        figures.robustness_summary(s, keys)

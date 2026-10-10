@@ -16,9 +16,19 @@ from beltgradient.orbits import ks_only, orbit_tests
 
 
 def test_groups_by_first_letter():
-    t = pd.Series(["Sq", "C", "Ch", "B", "F", "D", "Z", "K", "L", "Xc", "V", "T", None, "U"])
+    t = pd.Series(["Sq", "C", "Ch", "B", "F", "D", "Z", "K", "L", "Xc", "V", "T", "U"])
     assert to_group(t).tolist() == ["S-like", "C-like", "C-like", "C-like", "C-like", "D/P", "D/P", "K/L", "K/L", "X",
-                                    "S-like", "D/P", "other", "other"]
+                                    "S-like", "D/P", "other"]
+
+
+@pytest.mark.parametrize("label", [None, "G", "Ch?", "s"])
+def test_a_missing_class_or_an_unknown_letter_raises(label):
+    # a new class must be given a group in GROUP_OF_LETTER, never dropped into "other" (G: Tholen's, not used here)
+    if label == "Ch?":
+        assert to_group(pd.Series([label])).tolist() == ["C-like"]       # only the first letter matters
+        return
+    with pytest.raises(ValueError, match="no group"):
+        to_group(pd.Series(["S", label]))
 
 
 def test_norm_key():

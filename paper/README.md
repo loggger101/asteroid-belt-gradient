@@ -61,4 +61,5 @@ falls on, so the wide Figure 4 and Table 2 are defined in Section 3.5, a page be
 Without that, Figures 4 and 5 and Tables 2 and 3 all piled onto one page with six lines of text. When text
 is added or cut, recheck where the floats land. A heading line break is written `\\*`, never `\\` (in a
 centered heading `\\` ends a paragraph, and the heading can split across columns).
-The check does not replace looking at the rendered pages that changed.
+The check does not replace looking at the rendered pages that changed. Every rule has a test in
+`tests/test_check_format.py` that plants its defect and expects the FAIL; a new rule gets one too.

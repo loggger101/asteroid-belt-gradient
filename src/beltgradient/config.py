@@ -38,6 +38,8 @@ COLORS = {"S-like": "#c0392b", "C-like": "#2c3e50", "D/P": "#7d5a3c", "K/L": "#d
 # The AsteroidCatalog build analysed here: a frozen, checksummed GitHub release (data contract 1.8.1).
 # JPL adds bodies daily, so a result must name its build; releases are never rebuilt under a tag.
 CATALOG_RELEASE = "data-2026-09-29c"
+# the build date and data-contract version every row of that release carries (catalog_date, pipeline_version)
+CATALOG_DATE, CATALOG_CONTRACT = "2026-09-29", "1.8.1"
 
 
 @dataclass(frozen=True)

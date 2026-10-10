@@ -29,7 +29,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .config import A_MAX, A_MIN, Q_MIN, X_SPLIT_ALBEDO, ZONE_NAMES, ZONES
+from .config import A_MAX, A_MIN, CATALOG_CONTRACT, CATALOG_DATE, Q_MIN, X_SPLIT_ALBEDO, ZONE_NAMES, ZONES
 
 COLS = ["designation", "name", "spectral_type", "spectral_type_source", "semi_major_axis_au", "eccentricity",
         "inclination_deg", "perihelion_au", "diameter_km", "diameter_source", "albedo", "absolute_magnitude_h",
@@ -40,11 +40,14 @@ COLS = ["designation", "name", "spectral_type", "spectral_type_source", "semi_ma
 # fraction (without albedo it spans enstatite, metal and P-like bodies; DeMeo & Carry 2013; split_x_by_albedo
 # splits it by measured albedo as a robustness test). Z, Mahlke
 # et al.'s (2022) class of extremely red objects, is counted with D/P; F, one of Tholen's (1984) minor
-# classes, as C-like.
+# classes, as C-like. U (unusual: no class fits) is "other", left out of every fraction. Any other first
+# letter is an error: a new class must be assigned a group here, not dropped.
 GROUP_OF_LETTER = {**dict.fromkeys(list("SQAVRO"), "S-like"), **dict.fromkeys(list("CBF"), "C-like"),
                    **dict.fromkeys(list("DPTZ"), "D/P"), **dict.fromkeys(list("KL"), "K/L"),
-                   **dict.fromkeys(list("XME"), "X")}
-TIER_OF_SOURCE = {"source": "taxonomy", "albedo": "albedo_proxy", "albedo_assumed": "assumed"}
+                   **dict.fromkeys(list("XME"), "X"), "U": "other"}
+# every label route of the catalog; tholen and orbit label no main-belt body in this release (see above)
+TIER_OF_SOURCE = {"source": "taxonomy", "albedo": "albedo_proxy", "albedo_assumed": "assumed", "tholen": "tholen",
+                  "orbit": "orbit"}
 # Bus–DeMeo Xe and Xk already say which X they are (enstatite-like, metal-like); Tholen's M and E labels too
 X_SPLIT_EXEMPT = ("Xe", "Xk")
 
@@ -55,13 +58,26 @@ def norm_key(s: pd.Series) -> pd.Series:
 
 
 def to_group(t: pd.Series) -> pd.Series:
-    return t.astype(str).str[0].map(GROUP_OF_LETTER).fillna("other")
+    """Compositional group from the first letter of the class; a missing class or an unknown letter raises."""
+    g = t.astype("string").str[0].map(GROUP_OF_LETTER)
+    bad = g.isna()
+    if bad.any():
+        raise ValueError(f"{int(bad.sum())} bodies have no spectral type or one whose first letter has no group: "
+                         f"{sorted(t[bad].astype(str).unique())[:10]}")
+    return g.astype(object)
 
 
 def load_catalog(path: Path) -> pd.DataFrame:
     """The columns this analysis uses, read from an AsteroidCatalog release parquet."""
     cat = pd.read_parquet(path, columns=COLS)
+    found = {"catalog_date": set(cat.catalog_date.astype(str)), "pipeline_version": set(cat.pipeline_version.astype(str))}
+    if found != {"catalog_date": {CATALOG_DATE}, "pipeline_version": {CATALOG_CONTRACT}}:
+        raise ValueError(f"{path.name} is not the expected release build (catalog_date {CATALOG_DATE}, "
+                         f"data contract {CATALOG_CONTRACT}): it holds {found}")
     cat["key"] = norm_key(cat["designation"])
+    if not cat.key.is_unique:
+        raise ValueError(f"{int(cat.key.duplicated().sum())} designations collide after normalisation, "
+                         f"e.g. {cat.key[cat.key.duplicated()].head(5).tolist()}")
     return cat
 
 
@@ -84,8 +100,11 @@ def split_x_by_albedo(mb: pd.DataFrame) -> pd.DataFrame:
 
 def main_belt(cat: pd.DataFrame) -> pd.DataFrame:
     """2.1 < a < 3.3 AU, q > 1.3 AU, with zone, compositional group and label tier."""
-    mb = cat[cat.semi_major_axis_au.between(A_MIN, A_MAX) & (cat.perihelion_au > Q_MIN)].copy()
+    a = cat.semi_major_axis_au
+    mb = cat[(a > A_MIN) & (a < A_MAX) & (cat.perihelion_au > Q_MIN)].copy()
     mb["zone"] = pd.cut(mb.semi_major_axis_au, ZONES, labels=ZONE_NAMES)
     mb["group"] = to_group(mb.spectral_type)
-    mb["tier"] = mb.spectral_type_source.map(TIER_OF_SOURCE).fillna("none")
+    mb["tier"] = mb.spectral_type_source.map(TIER_OF_SOURCE)
+    if mb.tier.isna().any():
+        raise ValueError(f"unknown spectral_type_source: {sorted(mb.spectral_type_source[mb.tier.isna()].astype(str).unique())}")
     return mb

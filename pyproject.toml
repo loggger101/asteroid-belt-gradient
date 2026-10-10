@@ -33,4 +33,5 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-m 'not slow'"
+filterwarnings = ["error"]   # a warning is a defect: it fails the test that raised it
 markers = ["slow: full pipeline run against the committed results (needs data, ~1.5 min)"]

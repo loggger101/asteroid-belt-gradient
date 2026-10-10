@@ -307,6 +307,8 @@ def proper_element_map(mb: pd.DataFrame, orb: pd.DataFrame, ftab: pd.DataFrame):
 
 def _cell(s: str):
     lo_hi = re.match(r"([\d.]+) \[([\d.]+)–([\d.]+)\]", s)
+    if lo_hi is None:
+        raise ValueError(f"not a zone fraction 'f [lo–hi] (n=N)': {s!r}")
     return tuple(float(v) for v in lo_hi.groups())
 
 
@@ -342,8 +344,8 @@ def robustness_summary(summary: dict, keys: list[str]):
             ax.axhspan(-y - .5, -y + .5, color=BAND, lw=0, zorder=0)
         for z in ZONE_NAMES:
             f, lo, hi = vals[z]
-            if f is None:
-                continue
+            if f is None:                             # the figure claims every per-zone estimate: none may be missing
+                raise ValueError(f"robustness figure: no {z}-zone estimate for '{lab}'")
             if lo is not None:
                 ax.plot([lo, hi], [-y, -y], color=ZONE_COLORS[z], lw=1.1, zorder=2)
             ax.plot(f, -y, marker=ZONE_MARKERS[z], ms=3.3, color=ZONE_COLORS[z], mec="white", mew=.45, ls="none", zorder=3)

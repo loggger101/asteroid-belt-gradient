@@ -72,7 +72,7 @@ def completeness_plot(comp: pd.DataFrame, h_c: float, d_c: float):
 
 def c_fraction_panels(samples: dict[str, pd.DataFrame], panel_keys: list[str], rng: np.random.Generator):
     """C-fraction vs a: raw, collapsed + IPW, collapsed + size-complete."""
-    fig, axes = _fig(FULL_W, 2.3, ncols=3, sharey=True)
+    fig, axes = _fig(FULL_W, 2.5, ncols=3, sharey=True)
     for ax, k in zip(axes, panel_keys):
         s = samples[k]
         sparse = k != "raw"   # weighted / size-limited samples are thin at 0.05 AU
@@ -85,12 +85,12 @@ def c_fraction_panels(samples: dict[str, pd.DataFrame], panel_keys: list[str], r
         ax.plot(cb.a[ok], cb.f[ok], color=COLORS["K/L"], lw=.9, ls="--")
         mark_structure(ax)
         ax.set_title(f"{k.replace('≥', ' ≥ ')}  (n = {len(s):,})", loc="left", fontsize=6.5, color=INK)
-        ax.set(xlabel="semimajor axis a (AU)", ylim=(0, 1), xlim=(A_MIN, A_MAX))
+        ax.set(xlabel="semimajor axis a (au)", ylim=(0, 1), xlim=(A_MIN, A_MAX))
     axes[0].set_ylabel("carbonaceous fraction")
     axes[0].plot([], [], color=COLORS["C-like"], lw=1.3, label="narrow, C/(S+C), 16–84% band")
     axes[0].plot([], [], color=COLORS["K/L"], lw=.9, ls="--", label="broad, (C+D/P+K/L)/(all but X)")
-    axes[0].plot([], [], color=SNOW, lw=.8, ls="--", label=f"snow line, $T_{{eq}}$ = 170 K ({SNOW_LINE_AU:.2f} AU)")
-    axes[0].legend(loc="upper left")
+    axes[0].plot([], [], color=SNOW, lw=.8, ls="--", label=f"snow line, $T_{{eq}}$ = 170 K ({SNOW_LINE_AU:.2f} au)")
+    fig.legend(*axes[0].get_legend_handles_labels(), loc="outside lower center", ncol=3)   # below, clear of the data
     return fig
 
 
@@ -113,7 +113,7 @@ def stacked_composition(s: pd.DataFrame, d_c: float):
     top.tick_params(length=0, pad=1, labelsize=5.5, labelcolor=INK2)
     top.spines["top"].set_visible(False)
     top.set_xlabel(f"bodies per bin (D ≥ {d_c:.0f} km, families collapsed)", fontsize=6, color=INK2, labelpad=2)
-    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, 1), xlabel="semimajor axis a (AU)", ylabel="fraction by number")
+    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, 1), xlabel="semimajor axis a (au)", ylabel="fraction by number")
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=len(order), handlelength=1.0, columnspacing=1.0)
     return fig
 
@@ -151,7 +151,7 @@ def orbital_cdfs(orb: pd.DataFrame):
                             label=f"{g} (n = {len(arr):,})")
             if len(S) >= 10 and len(C) >= 10:
                 p = stats.ks_2samp(S, C).pvalue
-                ax.text(.03, .97, f"KS p = {p:.2g}", transform=ax.transAxes, ha="left", va="top", fontsize=5.5, color=INK2)
+                ax.text(.03, .97, f"KS p = {p:#.2g}", transform=ax.transAxes, ha="left", va="top", fontsize=5.5, color=INK2)
             ax.set(xlabel=lab.replace("proper ", "proper "), ylabel="cumulative fraction" if j == 0 else None, ylim=(0, 1.02))
             if i == 0:
                 ax.set_title(z, loc="left", fontsize=6.5)
@@ -160,7 +160,7 @@ def orbital_cdfs(orb: pd.DataFrame):
 
 
 def dark_fraction(alb: pd.DataFrame, d_ca: float, rng: np.random.Generator):
-    fig, ax = _fig(COL_W, 2.0)
+    fig, ax = _fig(COL_W, 2.3)
     for lab, d, c in [("all with measured albedo", alb, "#9aa5a6"),
                       (f"background, D ≥ {d_ca:.0f} km (complete)", alb[~alb.in_family & (alb.diameter_km >= d_ca)], COLORS["C-like"])]:
         x, f, lo, hi, n = dark_curve(d, np.arange(A_MIN, A_MAX + 1e-9, 0.1 if "D ≥" in lab else BIN_W), rng)
@@ -168,21 +168,21 @@ def dark_fraction(alb: pd.DataFrame, d_ca: float, rng: np.random.Generator):
         ax.fill_between(x[k], lo[k], hi[k], color=c, alpha=.2, lw=0)
         ax.plot(x[k], f[k], color=c, lw=1.2, label=f"{lab} (n = {len(d):,})")
     mark_structure(ax)
-    ax.set(xlabel="semimajor axis a (AU)", ylabel="fraction with $p_V$ < 0.10", ylim=(0, 1), xlim=(A_MIN, A_MAX))
-    ax.legend(loc="lower right")
+    ax.set(xlabel="semimajor axis a (au)", ylabel="fraction with $p_V$ < 0.10", ylim=(0, 1), xlim=(A_MIN, A_MAX))
+    fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center")
     return fig
 
 
 def circularity(assumed: pd.DataFrame, raw: pd.DataFrame, rng: np.random.Generator):
     """The assumed-albedo tier returns the step function it was built from."""
-    fig, ax = _fig(COL_W, 1.95)
+    fig, ax = _fig(COL_W, 2.3)
     for lab, d, c in [("assumed-albedo labels (circular)", assumed, "#e67e22"),
                       ("published taxonomy, raw", raw, COLORS["C-like"])]:
         cc = c_fraction_curve(d, rng, "narrow", n_boot=50)
         ax.plot(cc.a, cc.f, color=c, lw=1.2, label=f"{lab} (n = {len(d):,})")
     mark_structure(ax, snow=False)
-    ax.set(xlabel="semimajor axis a (AU)", ylabel="C/(S+C)", ylim=(-.02, 1.02), xlim=(A_MIN, A_MAX))
-    ax.legend(loc="lower right")
+    ax.set(xlabel="semimajor axis a (au)", ylabel="C/(S+C)", ylim=(-.02, 1.02), xlim=(A_MIN, A_MAX))
+    fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center")
     return fig
 
 
@@ -214,7 +214,7 @@ def size_distance_map(s: pd.DataFrame):
     top.spines["top"].set_visible(False)
     ax.set_yticks(np.arange(shape[0]) + .5, ["10–20", "20–50", "50–100", "≥ 100"])
     ax.tick_params(axis="y", length=0)
-    ax.set(xlabel="semimajor axis a (AU)", ylabel="diameter D (km)", xlim=(A_MIN, A_MAX))
+    ax.set(xlabel="semimajor axis a (au)", ylabel="diameter D (km)", xlim=(A_MIN, A_MAX))
     for side in ("left", "bottom"):
         ax.spines[side].set_visible(False)
     cb = fig.colorbar(m, ax=ax, pad=.02, fraction=.06, aspect=18, ticks=[0, .25, .5, .75, 1])
@@ -229,7 +229,7 @@ SAMPLE_COLORS = ["#8e8e8e", "#2a78d6", "#eb6834", "#1baf7a"]   # raw in gray; th
 
 def crossover_fits(xo: pd.DataFrame):
     """The fitted logistic P(C | a) of every sample, dotted outside the belt, with a50 and its 16–84% interval below."""
-    fig, (ax, ax2) = _fig(COL_W, 2.75, nrows=2, sharex=True, gridspec_kw={"height_ratios": [3, 1.15]})
+    fig, (ax, ax2) = _fig(COL_W, 3.0, nrows=2, sharex=True, gridspec_kw={"height_ratios": [3, 1.15]})
     x = np.linspace(1.4, 4.0, 521)
     inb = (x >= A_MIN) & (x <= A_MAX)
     labels = [k.replace("≥", " ≥ ") for k in xo.index]
@@ -252,10 +252,10 @@ def crossover_fits(xo: pd.DataFrame):
     ax.text(SNOW_LINE_AU + .03, .02, "snow line", fontsize=5.5, color=SNOW, va="bottom")
     ax.set(ylim=(0, 1), ylabel="fitted P(C | a)")
     ax.set_yticks([0, .1, .5, .9, 1])
-    ax.legend(loc="upper left", fontsize=5.5)
+    fig.legend(*ax.get_legend_handles_labels(), loc="outside upper center", ncol=2, fontsize=5.5)
     ax2.set_yticks(range(len(xo)), ["raw", "IPW, D ≥ 10", "D ≥ 53", "background"][::-1] if len(xo) == 4 else labels[::-1])
     ax2.tick_params(axis="y", length=0, labelsize=5.5)
-    ax2.set(xlim=(1.4, 4.0), ylim=(-.6, len(xo) - .4), xlabel="semimajor axis a (AU)")
+    ax2.set(xlim=(1.4, 4.0), ylim=(-.6, len(xo) - .4), xlabel="semimajor axis a (au)")
     ax2.set_ylabel("$a_{50}$", fontsize=6)
     return fig
 
@@ -285,7 +285,7 @@ def proper_element_map(mb: pd.DataFrame, orb: pd.DataFrame, ftab: pd.DataFrame):
                         ha="center", va="center", zorder=3,
                         bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=.75))
     mark_structure(ax, snow=False)
-    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, top_i), xlabel="proper semimajor axis $a_P$ (AU)", ylabel="proper sin $i_P$")
+    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, top_i), xlabel="proper semimajor axis $a_P$ (au)", ylabel="proper sin $i_P$")
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=3, markerscale=3.5, handletextpad=.3,
                title=f"background bodies, D ≥ {D_ORBIT:.0f} km:", title_fontsize=6, alignment="left")
     return fig
@@ -365,10 +365,10 @@ def snow_line_track(track, crossover: tuple[float, float]):
     for a_myr in (1.0, 5.0):
         k = int(np.argmin(abs(age - a_myr)))
         ax.plot(age[k], r[k], "o", ms=3.2, color=COLORS["C-like"], mec="white", mew=.5, zorder=4)
-        ax.annotate(f"{r[k]:.1f} AU at {age[k]:.0f} Myr", (age[k], r[k]), xytext=(5, 3), textcoords="offset points",
+        ax.annotate(f"{r[k]:.1f} au at {age[k]:.0f} Myr", (age[k], r[k]), xytext=(5, 3), textcoords="offset points",
                     fontsize=5.5, color=INK2)
     ax.set_xscale("log")
-    ax.set(xlim=(age[0], age[-1]), ylim=(1.5, 5.0), xlabel="age of a 1 $M_\\odot$ star (Myr)", ylabel="snow-line radius (AU)")
+    ax.set(xlim=(age[0], age[-1]), ylim=(1.5, 5.0), xlabel="age of a 1 $M_\\odot$ star (Myr)", ylabel="snow-line radius (au)")
     ax.set_xticks([.5, 1, 2, 5, 10, 20, 50], ["0.5", "1", "2", "5", "10", "20", "50"])
     x0 = age[0] * 1.06
     ax.text(age[-1] * .97, A_MAX - .05, "present main belt", ha="right", va="top", fontsize=5.5, color=INK2)
@@ -408,8 +408,8 @@ def sample_flow(summary: dict, keys: list[str]):
     fig.subplots_adjust(0, 0, 1, 1)
     ax.set(xlim=(0, 100), ylim=(0, 100)); ax.axis("off")
     _box(ax, 8, 86, 92, 99, [f"AsteroidCatalog {c['release']}: {c['rows']:,} bodies",
-                             f"main belt (2.1 < a < 3.3 AU, q > 1.3 AU): {c['main_belt']:,}"])
-    _box(ax, 1, 62, 33, 77, ["published taxonomy", f"{tiers['taxonomy']:,}", "the labels analysed"], focal=True)
+                             f"main belt (2.1 < a < 3.3 au, q > 1.3 au): {c['main_belt']:,}"])
+    _box(ax, 1, 62, 33, 77, ["published taxonomy", f"{tiers['taxonomy']:,}", "the labels analyzed"], focal=True)
     _box(ax, 35, 62, 65, 77, ["measured albedo", f"{tiers['albedo_proxy']:,}", "labels not used"], muted=True)
     _box(ax, 67, 62, 99, 77, ["assumed albedo", f"{tiers['assumed']:,}", "circular (Fig. 2)"], muted=True)
     for x in (17, 50, 83):

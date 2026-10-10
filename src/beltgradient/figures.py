@@ -37,6 +37,16 @@ RCPARAMS = {
     "axes.titlepad": 3, "axes.labelpad": 2, "lines.linewidth": 1.2, "lines.solid_capstyle": "round",
 }
 GROUP_ORDER = ["S-like", "K/L", "X", "C-like", "D/P"]
+AXIS_A = "semimajor axis $a$ (au)"
+ELEMENT_LABELS = {"e_p": "proper $e_\\mathrm{P}$", "sini_p": "proper $\\sin i_\\mathrm{P}$"}
+
+
+def _math(s: str) -> str:
+    """Variables in italic, as the paper sets them: "D≥10 km" -> "$D$ ≥ 10 km", "$H$ < 15", "$n$ = 3,786".
+    The relation sign stays outside math, with text spaces, as in "$p_\\mathrm{V}$ < 0.10"."""
+    s = re.sub(r"\bD ?≥ ?(\d+)", r"$D$ ≥ \1", s)
+    s = re.sub(r"\bH < (\d+)", r"$H$ < \1", s)
+    return re.sub(r"\bn = ", "$n$ = ", s)
 
 
 def _fig(w, h, **kw):
@@ -65,7 +75,7 @@ def completeness_plot(comp: pd.DataFrame, h_c: float, d_c: float):
     ax.axhline(COMPLETE_FRAC, color=INK2, ls=":", lw=.6)
     ax.axvline(h_c, color=COLORS["S-like"], lw=.8)
     ax.text(h_c + .15, .08, f"$H_\\mathrm{{c}}$ = {h_c}\n$D_\\mathrm{{c}}$ ≈ {d_c:.0f} km", color=COLORS["S-like"], fontsize=6)
-    ax.set(xlabel="absolute magnitude H", ylabel="fraction with a published taxonomy", xlim=(5, 18.5), ylim=(0, 1.03))
+    ax.set(xlabel="absolute magnitude $H$", ylabel="fraction with a published taxonomy", xlim=(5, 18.5), ylim=(0, 1.03))
     ax.legend(loc="lower left")
     return fig
 
@@ -84,8 +94,8 @@ def c_fraction_panels(samples: dict[str, pd.DataFrame], panel_keys: list[str], r
         cb = c_fraction_curve(s, rng, "broad", edges=np.arange(A_MIN, A_MAX + 1e-9, wide), n_boot=20)
         ax.plot(cb.a[ok], cb.f[ok], color=COLORS["K/L"], lw=.9, ls="--")
         mark_structure(ax)
-        ax.set_title(f"{k.replace('≥', ' ≥ ')}  (n = {len(s):,})", loc="left", fontsize=6.5, color=INK)
-        ax.set(xlabel="semimajor axis a (au)", ylim=(0, 1), xlim=(A_MIN, A_MAX))
+        ax.set_title(_math(f"{k}  (n = {len(s):,})"), loc="left", fontsize=6.5, color=INK)
+        ax.set(xlabel=AXIS_A, ylim=(0, 1), xlim=(A_MIN, A_MAX))
     axes[0].set_ylabel("carbonaceous fraction")
     axes[0].plot([], [], color=COLORS["C-like"], lw=1.3, label="narrow, C/(S+C), 16–84% band")
     axes[0].plot([], [], color=COLORS["K/L"], lw=.9, ls="--", label="broad, (C+D/P+K/L)/(all but X)")
@@ -112,8 +122,8 @@ def stacked_composition(s: pd.DataFrame, d_c: float):
     top.set_xticks(x, [f"{int(n)}" for n in st.sum(axis=1)])
     top.tick_params(length=0, pad=1, labelsize=5.5, labelcolor=INK2)
     top.spines["top"].set_visible(False)
-    top.set_xlabel(f"bodies per bin (D ≥ {d_c:.0f} km, families collapsed)", fontsize=6, color=INK2, labelpad=2)
-    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, 1), xlabel="semimajor axis a (au)", ylabel="fraction by number")
+    top.set_xlabel(_math(f"bodies per bin (D ≥ {d_c:.0f} km, families collapsed)"), fontsize=6, color=INK2, labelpad=2)
+    ax.set(xlim=(A_MIN, A_MAX), ylim=(0, 1), xlabel=AXIS_A, ylabel="fraction by number")
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=len(order), handlelength=1.0, columnspacing=1.0)
     return fig
 
@@ -148,11 +158,11 @@ def orbital_cdfs(orb: pd.DataFrame):
             for arr, g in [(S, "S-like"), (C, "C-like")]:
                 if len(arr):
                     ax.step(np.sort(arr), np.arange(1, len(arr) + 1) / len(arr), color=COLORS[g], lw=.9, where="post",
-                            label=f"{g} (n = {len(arr):,})")
+                            label=_math(f"{g} (n = {len(arr):,})"))
             if len(S) >= 10 and len(C) >= 10:
                 p = stats.ks_2samp(S, C).pvalue
-                ax.text(.03, .97, f"KS p = {p:#.2g}", transform=ax.transAxes, ha="left", va="top", fontsize=5.5, color=INK2)
-            ax.set(xlabel=lab.replace("proper ", "proper "), ylabel="cumulative fraction" if j == 0 else None, ylim=(0, 1.02))
+                ax.text(.03, .97, f"KS $p$ = {p:#.2g}", transform=ax.transAxes, ha="left", va="top", fontsize=5.5, color=INK2)
+            ax.set(xlabel=ELEMENT_LABELS[col], ylabel="cumulative fraction" if j == 0 else None, ylim=(0, 1.02))
             if i == 0:
                 ax.set_title(z, loc="left", fontsize=6.5)
                 ax.legend(loc="lower right", fontsize=5.5, handlelength=1.2)
@@ -161,14 +171,15 @@ def orbital_cdfs(orb: pd.DataFrame):
 
 def dark_fraction(alb: pd.DataFrame, d_ca: float, rng: np.random.Generator):
     fig, ax = _fig(COL_W, 2.3)
-    for lab, d, c in [("all with measured albedo", alb, "#9aa5a6"),
-                      (f"background, D ≥ {d_ca:.0f} km (complete)", alb[~alb.in_family & (alb.diameter_km >= d_ca)], COLORS["C-like"])]:
-        x, f, lo, hi, n = dark_curve(d, np.arange(A_MIN, A_MAX + 1e-9, 0.1 if "D ≥" in lab else BIN_W), rng)
+    for lab, d, c, w in [("all with measured albedo", alb, "#9aa5a6", BIN_W),
+                         (f"complete background, D ≥ {d_ca:.0f} km", alb[~alb.in_family & (alb.diameter_km >= d_ca)],
+                          COLORS["C-like"], 0.1)]:
+        x, f, lo, hi, n = dark_curve(d, np.arange(A_MIN, A_MAX + 1e-9, w), rng)
         k = n >= 5
         ax.fill_between(x[k], lo[k], hi[k], color=c, alpha=.2, lw=0)
-        ax.plot(x[k], f[k], color=c, lw=1.2, label=f"{lab} (n = {len(d):,})")
+        ax.plot(x[k], f[k], color=c, lw=1.2, label=_math(f"{lab} (n = {len(d):,})"))
     mark_structure(ax)
-    ax.set(xlabel="semimajor axis a (au)", ylabel="fraction with $p_\\mathrm{V}$ < 0.10", ylim=(0, 1), xlim=(A_MIN, A_MAX))
+    ax.set(xlabel=AXIS_A, ylabel="fraction with $p_\\mathrm{V}$ < 0.10", ylim=(0, 1), xlim=(A_MIN, A_MAX))
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center")
     return fig
 
@@ -176,12 +187,12 @@ def dark_fraction(alb: pd.DataFrame, d_ca: float, rng: np.random.Generator):
 def circularity(assumed: pd.DataFrame, raw: pd.DataFrame, rng: np.random.Generator):
     """The assumed-albedo tier returns the step function it was built from."""
     fig, ax = _fig(COL_W, 2.3)
-    for lab, d, c in [("assumed-albedo labels (circular)", assumed, "#e67e22"),
+    for lab, d, c in [("assumed-albedo labels, circular", assumed, "#e67e22"),
                       ("published taxonomy, raw", raw, COLORS["C-like"])]:
         cc = c_fraction_curve(d, rng, "narrow", n_boot=50)
-        ax.plot(cc.a, cc.f, color=c, lw=1.2, label=f"{lab} (n = {len(d):,})")
+        ax.plot(cc.a, cc.f, color=c, lw=1.2, label=_math(f"{lab} (n = {len(d):,})"))
     mark_structure(ax, snow=False)
-    ax.set(xlabel="semimajor axis a (au)", ylabel="C/(S+C)", ylim=(-.02, 1.02), xlim=(A_MIN, A_MAX))
+    ax.set(xlabel=AXIS_A, ylabel="C/(S+C)", ylim=(-.02, 1.02), xlim=(A_MIN, A_MAX))
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center")
     return fig
 
@@ -214,7 +225,7 @@ def size_distance_map(s: pd.DataFrame):
     top.spines["top"].set_visible(False)
     ax.set_yticks(np.arange(shape[0]) + .5, ["10–20", "20–50", "50–100", "≥ 100"])
     ax.tick_params(axis="y", length=0)
-    ax.set(xlabel="semimajor axis a (au)", ylabel="diameter D (km)", xlim=(A_MIN, A_MAX))
+    ax.set(xlabel=AXIS_A, ylabel="diameter $D$ (km)", xlim=(A_MIN, A_MAX))
     for side in ("left", "bottom"):
         ax.spines[side].set_visible(False)
     cb = fig.colorbar(m, ax=ax, pad=.02, fraction=.06, aspect=18, ticks=[0, .25, .5, .75, 1])
@@ -232,7 +243,7 @@ def crossover_fits(xo: pd.DataFrame):
     fig, (ax, ax2) = _fig(COL_W, 3.0, nrows=2, sharex=True, gridspec_kw={"height_ratios": [3, 1.15]})
     x = np.linspace(1.4, 4.0, 521)
     inb = (x >= A_MIN) & (x <= A_MAX)
-    labels = [k.replace("≥", " ≥ ") for k in xo.index]
+    labels = [_math(k) for k in xo.index]
     for ax_ in (ax, ax2):
         ax_.axvspan(A_MIN, A_MAX, color=BAND, lw=0, zorder=0)
         ax_.axvline(SNOW_LINE_AU, color=SNOW, lw=.8, ls="--", zorder=1)
@@ -250,18 +261,20 @@ def crossover_fits(xo: pd.DataFrame):
         ax.axhline(yy, color="#dcdbd6", lw=.5, zorder=1)
     ax.text((A_MIN + A_MAX) / 2, 1.0, "main belt", ha="center", va="bottom", fontsize=5.5, color=INK2, transform=ax.get_xaxis_transform())
     ax.text(SNOW_LINE_AU + .03, .02, "snow line", fontsize=5.5, color=SNOW, va="bottom")
-    ax.set(ylim=(0, 1), ylabel="fitted P(C | a)")
+    ax.set(ylim=(0, 1), ylabel="fitted $P(\\mathrm{C} \\mid a)$")
     ax.set_yticks([0, .1, .5, .9, 1])
     fig.legend(*ax.get_legend_handles_labels(), loc="outside upper center", ncol=2, fontsize=5.5)
-    ax2.set_yticks(range(len(xo)), ["raw", "IPW, D ≥ 10", "D ≥ 53", "background"][::-1] if len(xo) == 4 else labels[::-1])
+    short = ["raw", "IPW, D ≥ 10 km", "D ≥ 53 km", "background"]
+    ax2.set_yticks(range(len(xo)), [_math(s) for s in short][::-1] if len(xo) == 4 else labels[::-1])
     ax2.tick_params(axis="y", length=0, labelsize=5.5)
-    ax2.set(xlim=(1.4, 4.0), ylim=(-.6, len(xo) - .4), xlabel="semimajor axis a (au)")
+    ax2.set(xlim=(1.4, 4.0), ylim=(-.6, len(xo) - .4), xlabel=AXIS_A)
     ax2.set_ylabel("$a_{50}$", fontsize=6)
     return fig
 
 
 FAMILY_LABELS = {"Vesta": (0, -.035), "Flora": (-.03, -.05), "Nysa-Polana": (0, -.032), "Eunomia": (0, .055),
-                 "Koronis": (0, -.03), "Eos": (0, .05), "Themis": (0, .045), "Hygiea": (0, .045)}
+                 "Koronis": (.012, -.03), "Eos": (0, .05), "Themis": (0, .045), "Hygiea": (0, .045)}
+LABEL_Y_MIN = .02   # keeps a label's box above the axis line
 
 
 def proper_element_map(mb: pd.DataFrame, orb: pd.DataFrame, ftab: pd.DataFrame):
@@ -275,19 +288,20 @@ def proper_element_map(mb: pd.DataFrame, orb: pd.DataFrame, ftab: pd.DataFrame):
     for g in ["S-like", "C-like"]:
         d = orb[orb.group.eq(g)]
         ax.scatter(d.a_p, d.sini_p, s=1.6, color=COLORS[g], lw=0, alpha=.9, zorder=2,
-                   label=f"{g} (n = {len(d):,})")
+                   label=_math(f"{g} (n = {len(d):,})"))
     for name, (dx, dy) in FAMILY_LABELS.items():
         ids = ftab.index[ftab.fam_name.eq(name)]
         if len(ids):
             m = fam[fam.fam_id.eq(ids[0])]
             if len(m):
-                ax.text(m.a_p.median() + dx, m.sini_p.median() + dy, name.replace("-", "–"), fontsize=5.2, color=INK,
+                y = max(m.sini_p.median() + dy, LABEL_Y_MIN)
+                ax.text(m.a_p.median() + dx, y, name.replace("-", "–"), fontsize=5.2, color=INK,
                         ha="center", va="center", zorder=3,
                         bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=.75))
     mark_structure(ax, snow=False)
     ax.set(xlim=(A_MIN, A_MAX), ylim=(0, top_i), xlabel="proper semimajor axis $a_\\mathrm{P}$ (au)", ylabel="proper sin $i_\\mathrm{P}$")
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=3, markerscale=3.5, handletextpad=.3,
-               title=f"background bodies, D ≥ {D_ORBIT:.0f} km:", title_fontsize=6, alignment="left")
+               title=_math(f"background bodies, D ≥ {D_ORBIT:.0f} km:"), title_fontsize=6, alignment="left")
     return fig
 
 
@@ -335,7 +349,7 @@ def robustness_summary(summary: dict, keys: list[str]):
             ax.plot(f, -y, marker=ZONE_MARKERS[z], ms=3.3, color=ZONE_COLORS[z], mec="white", mew=.45, ls="none", zorder=3)
         y += 1
     ax.axhline(-3.5 - .35, color=RULE, lw=.5)
-    ax.set_yticks(ys, labs, fontsize=5.8)
+    ax.set_yticks(ys, [_math(s) for s in labs], fontsize=5.8)
     for t, is_main in zip(ax.get_yticklabels(), main):
         t.set_color(INK if is_main else INK2)
     ax.tick_params(axis="y", length=0)
@@ -408,7 +422,7 @@ def sample_flow(summary: dict, keys: list[str]):
     fig.subplots_adjust(0, 0, 1, 1)
     ax.set(xlim=(0, 100), ylim=(0, 100)); ax.axis("off")
     _box(ax, 8, 86, 92, 99, [f"AsteroidCatalog {c['release']}: {c['rows']:,} bodies",
-                             f"main belt (2.1 < a < 3.3 au, q > 1.3 au): {c['main_belt']:,}"])
+                             f"main belt (2.1 < $a$ < 3.3 au, $q$ > 1.3 au): {c['main_belt']:,}"])
     _box(ax, 1, 62, 33, 77, ["published taxonomy", f"{tiers['taxonomy']:,}", "the labels analyzed"], focal=True)
     _box(ax, 35, 62, 65, 77, ["measured albedo", f"{tiers['albedo_proxy']:,}", "labels not used"], muted=True)
     _box(ax, 67, 62, 99, 77, ["assumed albedo", f"{tiers['assumed']:,}", "circular (Fig. 2)"], muted=True)
@@ -425,7 +439,7 @@ def sample_flow(summary: dict, keys: list[str]):
               ("collapsed", f"D ≥ {summary['completeness']['D_complete_km']:.0f} km", f"n = {ss['collapsed_complete']:,}"),
               ("background", f"D ≥ {summary['completeness']['D_complete_km']:.0f} km", f"n = {ss['background_complete']:,}")]
     for x0, lab in zip(xs, labels):
-        _box(ax, x0, y0, x0 + w, y1, list(lab))
+        _box(ax, x0, y0, x0 + w, y1, [_math(s) for s in lab])
     _arrow(ax, [(6, 62), (6, y1)])                                  # raw: straight from the labelled bodies
     _arrow(ax, [(37.75, 39), (37.75, y1)])                          # collapsed, IPW
     _arrow(ax, [(58, 39), (58, 32), (62.75, 32), (62.75, y1)])      # collapsed, size-complete
@@ -443,7 +457,7 @@ def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
     fig, ax = _fig(COL_W, 2.0)
     for g in ALBEDO_GROUPS:
         a = t.loc[t.group.eq(g), "albedo"].clip(1e-2, .999)
-        ax.hist(a, bins=bins, density=True, histtype="step", lw=1.0, color=COLORS[g], label=f"{g} (n = {len(a):,})")
+        ax.hist(a, bins=bins, density=True, histtype="step", lw=1.0, color=COLORS[g], label=_math(f"{g} (n = {len(a):,})"))
     ax.axvline(cuts[0], color=INK2, lw=.7)
     ax.axvline(cuts[1], color=INK2, lw=.6, ls=":")
     ax.set_xscale("log")
@@ -456,5 +470,6 @@ def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
     ax.set(xlim=(.01, 1), xlabel="measured geometric albedo $p_\\mathrm{V}$", ylabel="probability density")
     ax.set_yticks([])
     ax.spines["left"].set_visible(False)
-    ax.legend(loc="center right", handlelength=1.2)
+    # below the plot: inside, the 0.30 line crossed the legend
+    fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=2, handlelength=1.2)
     return fig

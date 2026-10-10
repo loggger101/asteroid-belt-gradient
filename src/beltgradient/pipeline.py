@@ -71,7 +71,7 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
     top4 = t_mass.nlargest(4, "estimated_mass_kg")
     mz = mass_by_zone(t_mass, GROUP_ORDER)
 
-    # D/P share of the size-complete collapsed sample per 0.1 AU bin, from 2.9 AU outward (Fig. 3)
+    # D/P share of the size-complete collapsed sample per 0.1 AU bin, from 2.9 AU outward (Fig. 5)
     col = samples[keys[2]]
     edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
     st = (col[col.group.isin(GROUP_ORDER)].assign(bin=pd.cut(col.semi_major_axis_au, edges))
@@ -86,7 +86,7 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
     comp_h14 = comp.loc[[iv for iv in comp.index if 13.5 <= iv.left < 14.5]]
     ipw_pool = mb[mb.tier.eq("taxonomy") & (mb.diameter_km >= D_IPW)]
 
-    # the albedo the catalog assumed for each assumed-tier label, and the range of a it covers (Fig. 1)
+    # the albedo the catalog assumed for each assumed-tier label, and the range of a it covers (Fig. 2)
     asm = mb[mb.tier.eq("assumed")].groupby("albedo_assumed_for_diameter").semi_major_axis_au.agg(["min", "max", "size"])
     # families the Limitations section names
     fam = lambda name: ftab.index[ftab.fam_name.eq(name)][0]
@@ -222,7 +222,7 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     cat = load_catalog(paths.catalog)
     _log(verbose, f"catalog {CATALOG_RELEASE}: {len(cat):,} rows | catalog_date {cat.catalog_date.iloc[0]} | pipeline {cat.pipeline_version.iloc[0]}")
     mb = main_belt(cat)
-    _log(verbose, f"main belt ({A_MIN}-{A_MAX} AU): {len(mb):,} | taxonomy tier {mb.tier.eq('taxonomy').sum():,}")
+    _log(verbose, f"main belt ({A_MIN}-{A_MAX} au): {len(mb):,} | taxonomy tier {mb.tier.eq('taxonomy').sum():,}")
 
     # 3 · families, proper elements, optional one-step extension
     fams, members = load_families(paths.nesvorny)
@@ -305,7 +305,7 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     # 9f · X-types split by measured albedo (point estimates: no RNG)
     xsplit = x_split_by_albedo(mb, fams, ftab, samples, keys, D_C)
 
-    # 9g · C/(S+C) of the IPW sample by a and D (Fig. 4; no RNG)
+    # 9g · C/(S+C) of the IPW sample by a and D (Fig. 6; no RNG)
     a_e, d_e, f_ad, n_ad = size_distance_grid(samples[keys[1]])
     size_map = {"sample": keys[1], "a_edges_au": [float(v) for v in a_e],
                 "d_edges_km": [None if np.isinf(v) else float(v) for v in d_e],

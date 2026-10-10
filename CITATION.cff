@@ -6,8 +6,8 @@ authors:
   - family-names: Edwards
     given-names: Logan M.
     affiliation: "Department of Aerospace, Physics, and Space Sciences, Florida Institute of Technology"
-version: 2.6.2
-date-released: 2026-10-09
+version: 2.6.3
+date-released: 2026-10-10
 license: MIT
 repository-code: "https://github.com/loggger101/asteroid-belt-gradient"
 keywords:

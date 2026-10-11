@@ -30,7 +30,7 @@ EXTEND_FAMILIES = False            # one-step nearest-member extension (sensitiv
 X_SPLIT_ALBEDO = (0.10, 0.30)
 N_BOOT         = 300
 SEED           = 4045              # one RNG stream for the whole run; draw order is fixed by pipeline.run()
-H_EDGES        = np.arange(3, 19.5, 0.5)
+H_EDGES        = np.arange(2, 19.5, 0.5)   # from below the brightest main-belt bodies (Ceres, Vesta: H ~ 3.3)
 
 COLORS = {"S-like": "#c0392b", "C-like": "#2c3e50", "D/P": "#7d5a3c", "K/L": "#d68910", "X": "#8e8e8e", "other": "#cccccc"}
 

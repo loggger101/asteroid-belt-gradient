@@ -3,28 +3,40 @@
 The synthetic belt has known properties, so a run can be checked against them:
 
 * P(C | a) among S- and C-types is logistic with a50 = ``TRUE_A50`` at every size;
-* taxonomy labels depend only on H: every body brighter than H = 10.5 is labelled, fainter ones less
-  and less often (so H_c = 10.5 and D_c = 52.8 km, as in the real catalog); a dark C-type is fainter
+* taxonomy labels depend only on H: every body with H <= 10.5 is labelled (the H bins are closed on the
+  right), fainter ones less and less often (so H_c = 10.5 and D_c = 52.8 km, as in the real catalog); a dark C-type is fainter
   than an S-type of the same size, so the raw labelled sample is biased toward S;
-* measured albedos are complete brighter than H = 12;
+* measured albedos are complete to H = 12;
 * ``N_HALO`` unlisted bodies sit a few m/s from Themis and Vesta members, for the one-step extension.
 
 The family bundle carries the quirks :func:`beltgradient.families.load_families` has to handle: a
 family whose parent has no number ("-- 2012 PM61"), two identical member lists (Leonidas and Vibilia),
 a family nested in another (Karin in Koronis), list lines without members (James Bond, "503 -"),
-a family outside the main belt (Hilda), and CRLF line ends.
+a family outside the main belt (Hilda), and CRLF line ends. Every family the proper-element figure labels
+(``figures.FAMILY_LABELS``) is there, since a missing one is an error.
 """
 from __future__ import annotations
+
+from pathlib import Path
 
 import matplotlib
 import numpy as np
 import pandas as pd
 import pytest
 
+import beltgradient
 from beltgradient.catalog import COLS
 from beltgradient.config import Paths
 
 matplotlib.use("Agg")                    # before any test imports pyplot (the pipeline does)
+
+# The tests must test this checkout. An editable install of another clone (or an older wheel) earlier on
+# sys.path would otherwise be imported instead, and every test would pass against code nobody is editing.
+SRC = Path(__file__).resolve().parents[1] / "src"
+if Path(beltgradient.__file__).resolve().parent != SRC / "beltgradient":
+    raise ImportError(f"the tests imported beltgradient from {Path(beltgradient.__file__).parent}, not from this "
+                      f"checkout's {SRC / 'beltgradient'}: run pytest from the repository root (pyproject.toml puts src/ "
+                      f"first on sys.path), or reinstall with `pip install -e .` here")
 
 TRUE_A50 = 2.6
 N_HALO = 10
@@ -40,8 +52,11 @@ FAMILIES_2015 = [
     ("001", 153, "Hilda", 130, 15, (3.96, 0.17, 0.15), {"D": 1.0}),
     ("401", 4, "Vesta", 50, 60, (2.36, 0.10, 0.12), {"S": 0.9, "C": 0.1}),
     ("402", 8, "Flora", 60, 40, (2.25, 0.14, 0.09), {"S": 0.85, "C": 0.15}),
+    ("405", 135, "Nysa-Polana", 60, 20, (2.42, 0.16, 0.05), {"C": 0.6, "S": 0.4}),
+    ("502", 15, "Eunomia", 55, 20, (2.62, 0.15, 0.23), {"S": 0.9, "C": 0.1}),
     ("528", 2782, "Leonidas", 50, 15, (2.68, 0.19, 0.06), {"C": 0.8, "S": 0.2}),
     ("529", 144, "Vibilia", 100, 0, None, None),
+    ("601", 10, "Hygiea", 70, 20, (3.14, 0.12, 0.09), {"C": 0.9, "S": 0.1}),
     ("602", 24, "Themis", 60, 60, (3.13, 0.15, 0.02), {"C": 0.9, "S": 0.1}),
     ("605", 158, "Koronis", 45, 40, (2.88, 0.05, 0.04), {"S": 0.9, "C": 0.1}),
     ("606", 221, "Eos", 45, 40, (3.01, 0.08, 0.17), {"K": 0.5, "S": 0.4, "C": 0.1}),
@@ -125,8 +140,8 @@ def _extras() -> pd.DataFrame:
 def _catalog(rng, df: pd.DataFrame) -> pd.DataFrame:
     n = len(df)
     H = np.round(5 * np.log10(1329 / (df.D * np.sqrt(df.p))), 2)
-    labelled = (H < 10.5) | (rng.random(n) < np.clip(0.85 - 0.15 * (H - 10.5), 0.05, 1))
-    measured = (H < 12) | (rng.random(n) < 0.5)
+    labelled = (H <= 10.5) | (rng.random(n) < np.clip(0.85 - 0.15 * (H - 10.5), 0.05, 1))
+    measured = (H <= 12) | (rng.random(n) < 0.5)
     by_a = np.select([df.a < 2.5, df.a < 2.82, df.a < 3.27], [0.190, 0.086, 0.066], 0.057)
     assumed = np.where(measured, np.nan, np.where(labelled, df.group.map(ALBEDO), by_a))
     tier = np.select([labelled, measured], ["source", "albedo"], "albedo_assumed")

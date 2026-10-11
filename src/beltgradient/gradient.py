@@ -136,6 +136,8 @@ def zone_table(samples: dict[str, pd.DataFrame], rng: np.random.Generator, which
     rows = {}
     for k, s in samples.items():
         c = c_fraction_curve(s, rng, which, edges=np.array(ZONES), n_boot=N_BOOT)
+        if (c.n == 0).any():                     # it would be written "nan [nan–nan] (n=0)" into the summary
+            raise ValueError(f"sample '{k}' ({which}) has no body in the {', '.join(np.array(ZONE_NAMES)[c.n == 0])} zone")
         rows[k] = [f"{f:.2f} [{l:.2f}–{h:.2f}] (n={n})" for f, l, h, n in zip(c.f, c.lo, c.hi, c.n)]
     return pd.DataFrame(rows, index=ZONE_NAMES).T
 
@@ -198,5 +200,11 @@ def inner_belt_by_size(mb: pd.DataFrame) -> pd.DataFrame:
 
 
 def mass_by_zone(d: pd.DataFrame, order: list[str]) -> pd.DataFrame:
-    """Summed ``estimated_mass_kg`` per (zone, group)."""
+    """Summed ``estimated_mass_kg`` per (zone, group); a group in ``order`` with no body there weighs 0.
+
+    A group of ``d`` that ``order`` leaves out raises: its mass would otherwise vanish from every total.
+    """
+    extra = sorted(set(d.group) - set(order))
+    if extra:
+        raise ValueError(f"mass_by_zone: groups {extra} are not in the order {order}")
     return d.pivot_table(index="zone", columns="group", values="estimated_mass_kg", aggfunc="sum", observed=False).reindex(columns=order).fillna(0)

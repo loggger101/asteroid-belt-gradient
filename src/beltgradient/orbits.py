@@ -19,6 +19,7 @@ from scipy import stats
 from .config import D_ORBIT, ZONE_NAMES
 
 ELEMENTS = [("e_p", "proper e"), ("sini_p", "proper sin i")]
+MIN_PER_CLASS = 10
 
 
 def orbit_sample(mb: pd.DataFrame) -> pd.DataFrame:
@@ -37,30 +38,37 @@ def split_by_class(orb: pd.DataFrame, zone: str, col: str) -> tuple[np.ndarray, 
     return oz.loc[oz.group == "S-like", col].values, oz.loc[oz.group == "C-like", col].values
 
 
-def ks_only(orb: pd.DataFrame, alpha: float = 0.05) -> pd.DataFrame:
-    """KS p-value per zone and element, as in :func:`orbit_tests` but with no bootstrap (no random draws)."""
-    rows = []
+def _test_pairs(orb: pd.DataFrame):
+    """(zone, element label, S values, C values) for every zone and element, in order.
+
+    Every one of the len(ZONE_NAMES) x len(ELEMENTS) tests must run: a zone too thin to test would otherwise
+    drop out and quietly change the Bonferroni divisor the paper states (8 tests, p < 0.00625).
+    """
     for z in ZONE_NAMES:
         for col, lab in ELEMENTS:
             S, C = split_by_class(orb, z, col)
-            if len(S) >= 10 and len(C) >= 10:
-                rows.append(dict(zone=z, element=lab, n_S=len(S), n_C=len(C), KS_p=stats.ks_2samp(S, C).pvalue))
-    out = pd.DataFrame(rows)
+            if len(S) < MIN_PER_CLASS or len(C) < MIN_PER_CLASS:
+                raise ValueError(f"orbit test, {z} zone, {lab}: {len(S)} S-like and {len(C)} C-like bodies; "
+                                 f"each class needs at least {MIN_PER_CLASS}")
+            yield z, lab, S, C
+
+
+def ks_only(orb: pd.DataFrame, alpha: float = 0.05) -> pd.DataFrame:
+    """KS p-value per zone and element, as in :func:`orbit_tests` but with no bootstrap (no random draws)."""
+    out = pd.DataFrame([dict(zone=z, element=lab, n_S=len(S), n_C=len(C), KS_p=stats.ks_2samp(S, C).pvalue)
+                        for z, lab, S, C in _test_pairs(orb)])
     out["bonferroni_sig"] = out.KS_p < alpha / len(out)
     return out
 
 
 def orbit_tests(orb: pd.DataFrame, rng: np.random.Generator, alpha: float = 0.05) -> pd.DataFrame:
-    """KS test and C-minus-S median difference per zone and element (needs >= 10 of each class)."""
+    """KS test and C-minus-S median difference per zone and element (each needs >= MIN_PER_CLASS of each class)."""
     rows = []
-    for z in ZONE_NAMES:
-        for col, lab in ELEMENTS:
-            S, C = split_by_class(orb, z, col)
-            if len(S) >= 10 and len(C) >= 10:
-                ks = stats.ks_2samp(S, C)
-                md_, lo, hi = med_diff_ci(C, S, rng)
-                rows.append(dict(zone=z, element=lab, n_S=len(S), n_C=len(C), median_S=np.median(S), median_C=np.median(C),
-                                 dmedian_C_minus_S=md_, ci95_lo=lo, ci95_hi=hi, KS_D=ks.statistic, KS_p=ks.pvalue))
+    for z, lab, S, C in _test_pairs(orb):
+        ks = stats.ks_2samp(S, C)
+        md_, lo, hi = med_diff_ci(C, S, rng)
+        rows.append(dict(zone=z, element=lab, n_S=len(S), n_C=len(C), median_S=np.median(S), median_C=np.median(C),
+                         dmedian_C_minus_S=md_, ci95_lo=lo, ci95_hi=hi, KS_D=ks.statistic, KS_p=ks.pvalue))
     out = pd.DataFrame(rows)
     out["bonferroni_sig"] = out.KS_p < alpha / len(out)   # 8 tests -> p < 0.00625
     return out

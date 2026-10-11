@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from .config import N_BOOT
+from .gradient import bin_index
 
 DARK_ALBEDO = 0.10
 
@@ -26,9 +27,20 @@ def with_measured_albedo(mb: pd.DataFrame) -> pd.DataFrame:
 
 
 def dark_curve(d: pd.DataFrame, edges, rng: np.random.Generator, n_boot: int = N_BOOT):
-    """Return (bin centres, dark fraction, 16%, 84%, counts)."""
-    b = np.clip(np.digitize(d.semi_major_axis_au, edges) - 1, 0, len(edges) - 2); nb = len(edges) - 1
+    """Return (bin centres, dark fraction, 16%, 84%, counts); a semimajor axis outside ``edges`` raises.
+
+    As in :func:`beltgradient.gradient.c_fraction_curve`, an empty bin has no fraction and no interval, and in an
+    occupied bin a replicate that drew no body is skipped (it has no fraction, not a fraction of 0).
+    """
+    b = bin_index(d.semi_major_axis_au, edges, "semimajor axes"); nb = len(edges) - 1
     y = d.dark.values.astype(float)
-    f = lambda w: np.bincount(b, w * y, nb) / np.maximum(np.bincount(b, w, nb), 1e-300)
+
+    def f(w):
+        den = np.bincount(b, w, nb)
+        return np.where(den > 0, np.bincount(b, w * y, nb) / np.maximum(den, 1e-300), np.nan)
+
     boots = np.array([f(rng.poisson(1.0, len(y)).astype(float)) for _ in range(n_boot)])
-    return (edges[:-1] + edges[1:]) / 2, f(np.ones(len(y))), *np.percentile(boots, [16, 84], axis=0), np.bincount(b, None, nb)
+    n = np.bincount(b, None, nb)
+    lo, hi = np.full(nb, np.nan), np.full(nb, np.nan)
+    lo[n > 0], hi[n > 0] = np.nanpercentile(boots[:, n > 0], [16, 84], axis=0)
+    return (edges[:-1] + edges[1:]) / 2, f(np.ones(len(y))), lo, hi, n

@@ -99,7 +99,14 @@ def split_x_by_albedo(mb: pd.DataFrame) -> pd.DataFrame:
 
 
 def main_belt(cat: pd.DataFrame) -> pd.DataFrame:
-    """2.1 < a < 3.3 AU, q > 1.3 AU, with zone, compositional group and label tier."""
+    """2.1 < a < 3.3 AU, q > 1.3 AU, with zone, compositional group and label tier.
+
+    A body without a or q could not be placed, and would fail both comparisons and vanish: that raises.
+    """
+    unplaced = cat.semi_major_axis_au.isna() | cat.perihelion_au.isna()
+    if unplaced.any():
+        raise ValueError(f"{int(unplaced.sum())} bodies have no semimajor axis or perihelion, "
+                         f"e.g. {cat.designation[unplaced].head(5).tolist()}")
     a = cat.semi_major_axis_au
     mb = cat[(a > A_MIN) & (a < A_MAX) & (cat.perihelion_au > Q_MIN)].copy()
     mb["zone"] = pd.cut(mb.semi_major_axis_au, ZONES, labels=ZONE_NAMES)

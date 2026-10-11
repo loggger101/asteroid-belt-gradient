@@ -35,12 +35,16 @@ def completeness(mb: pd.DataFrame, labelled: pd.Series) -> tuple[pd.DataFrame, p
 def complete_limit(comp: pd.DataFrame, n: pd.DataFrame) -> float:
     """Faintest H edge such that every populated (H, zone) cell brighter than it is >= COMPLETE_FRAC labelled.
 
-    If every populated cell is, that is the last edge.
+    If no populated cell falls short, the limit lies beyond ``H_EDGES`` and is not known: that raises, rather than
+    reporting the last edge as if it were the limit.
     """
     ok = ((comp >= COMPLETE_FRAC) | (n == 0)).all(axis=1) & (n.sum(axis=1) > 0)
     populated = n.sum(axis=1).values > 0
     bad = np.where(populated & ~ok.values)[0]
-    return float(H_EDGES[bad[0]] if len(bad) else H_EDGES[-1])
+    if not len(bad):
+        raise ValueError(f"every populated (H, zone) cell is >= {COMPLETE_FRAC:.0%} labelled up to H = {H_EDGES[-1]}: "
+                         f"the complete limit lies beyond H_EDGES, so extend them")
+    return float(H_EDGES[bad[0]])
 
 
 def diameter_limit(h_c: float, p_dark: float = P_DARKEST) -> float:
@@ -49,9 +53,18 @@ def diameter_limit(h_c: float, p_dark: float = P_DARKEST) -> float:
 
 
 def add_ipw_weights(mb: pd.DataFrame, comp: pd.DataFrame) -> pd.DataFrame:
-    """Per-body completeness ``c`` and IPW weight ``w_ipw`` (0 for bodies that cannot enter the IPW sample)."""
+    """Per-body completeness ``c`` and IPW weight ``w_ipw`` (0 for bodies that cannot enter the IPW sample).
+
+    A body outside ``H_EDGES`` (fainter than its last edge, or with no H) has no completeness. That is allowed only
+    where it cannot matter: a taxonomy-labelled body brighter than ``H_IPW_MAX`` without one raises, since it
+    would otherwise drop out of the IPW sample unnoticed.
+    """
     hi_, zi_ = mb.H_bin.cat.codes.values, mb.zone.cat.codes.values
     valid = (hi_ >= 0) & (zi_ >= 0)
+    lost = mb.tier.eq("taxonomy").values & ~valid & ~(mb.absolute_magnitude_h >= H_IPW_MAX).values
+    if lost.any():
+        raise ValueError(f"{int(lost.sum())} taxonomy-labelled bodies brighter than H = {H_IPW_MAX} (or with no H) have no "
+                         f"(H bin, zone) cell: {mb.loc[lost, ['designation', 'absolute_magnitude_h']].head(5).to_dict('records')}")
     mb["c"] = np.nan
     mb.loc[valid, "c"] = comp.values[hi_[valid], zi_[valid]]
     mb["w_ipw"] = np.where(mb.tier.eq("taxonomy") & (mb.absolute_magnitude_h < H_IPW_MAX) & (mb.c >= C_MIN_IPW), 1 / mb.c, 0.0)

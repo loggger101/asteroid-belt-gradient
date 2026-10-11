@@ -18,10 +18,11 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap, LogNorm, TwoSlopeNorm
 from scipy import stats
 
-from .albedo import dark_curve
-from .config import A_MAX, A_MIN, BIN_W, COLORS, COMPLETE_FRAC, D_ORBIT, KIRKWOOD, SNOW_LINE_AU, ZONE_NAMES
-from .gradient import MIN_CELL, c_fraction_curve, mass_by_zone, size_distance_grid
-from .orbits import ELEMENTS, split_by_class
+from .albedo import DARK_ALBEDO, dark_curve
+from .config import (A_MAX, A_MIN, BIN_W, COLORS, COMPLETE_FRAC, D_IPW, D_ORBIT, H_IPW_MAX, KIRKWOOD, SNOW_LINE_AU,
+                     ZONE_NAMES)
+from .gradient import MIN_CELL, c_fraction_curve, mass_by_zone, sample_keys, size_distance_grid
+from .orbits import ELEMENTS, MIN_PER_CLASS, split_by_class
 
 COL_W, FULL_W = 3.3125, 7.0208      # inches: the paper's column and text widths
 INK, INK2, RULE, BAND = "#0b0b0b", "#52514e", "#b9b8b2", "#f2f1ee"
@@ -159,7 +160,7 @@ def orbital_cdfs(orb: pd.DataFrame):
                 if len(arr):
                     ax.step(np.sort(arr), np.arange(1, len(arr) + 1) / len(arr), color=COLORS[g], lw=.9, where="post",
                             label=_math(f"{g} (n = {len(arr):,})"))
-            if len(S) >= 10 and len(C) >= 10:
+            if len(S) >= MIN_PER_CLASS and len(C) >= MIN_PER_CLASS:
                 p = stats.ks_2samp(S, C).pvalue
                 ax.text(.03, .97, f"KS $p$ = {p:#.2g}", transform=ax.transAxes, ha="left", va="top", fontsize=5.5, color=INK2)
             ax.set(xlabel=ELEMENT_LABELS[col], ylabel="cumulative fraction" if j == 0 else None, ylim=(0, 1.02))
@@ -238,8 +239,14 @@ def size_distance_map(s: pd.DataFrame):
 SAMPLE_COLORS = ["#8e8e8e", "#2a78d6", "#eb6834", "#1baf7a"]   # raw in gray; then the reference palette's slots 1-3
 
 
-def crossover_fits(xo: pd.DataFrame):
-    """The fitted logistic P(C | a) of every sample, dotted outside the belt, with a50 and its 16–84% interval below."""
+def crossover_fits(xo: pd.DataFrame, d_c: float):
+    """The fitted logistic P(C | a) of every sample, dotted outside the belt, with a50 and its 16–84% interval below.
+
+    ``xo`` must hold the four samples of :func:`beltgradient.gradient.sample_keys` for ``d_c``, in order: the short
+    labels of the lower panel are built from the same cuts, so they cannot name a sample the fit did not use.
+    """
+    if list(xo.index) != sample_keys(d_c):
+        raise ValueError(f"crossover figure: expected the samples {sample_keys(d_c)}, got {list(xo.index)}")
     fig, (ax, ax2) = _fig(COL_W, 3.0, nrows=2, sharex=True, gridspec_kw={"height_ratios": [3, 1.15]})
     x = np.linspace(1.4, 4.0, 521)
     inb = (x >= A_MIN) & (x <= A_MAX)
@@ -264,8 +271,8 @@ def crossover_fits(xo: pd.DataFrame):
     ax.set(ylim=(0, 1), ylabel="fitted $P(\\mathrm{C} \\mid a)$")
     ax.set_yticks([0, .1, .5, .9, 1])
     fig.legend(*ax.get_legend_handles_labels(), loc="outside upper center", ncol=2, fontsize=5.5)
-    short = ["raw", "IPW, D ≥ 10 km", "D ≥ 53 km", "background"]
-    ax2.set_yticks(range(len(xo)), [_math(s) for s in short][::-1] if len(xo) == 4 else labels[::-1])
+    short = ["raw", f"IPW, D ≥ {D_IPW:.0f} km", f"D ≥ {d_c:.0f} km", "background"]
+    ax2.set_yticks(range(len(xo)), [_math(s) for s in short][::-1])
     ax2.tick_params(axis="y", length=0, labelsize=5.5)
     ax2.set(xlim=(1.4, 4.0), ylim=(-.6, len(xo) - .4), xlabel=AXIS_A)
     ax2.set_ylabel("$a_{50}$", fontsize=6)
@@ -291,13 +298,14 @@ def proper_element_map(mb: pd.DataFrame, orb: pd.DataFrame, ftab: pd.DataFrame):
                    label=_math(f"{g} (n = {len(d):,})"))
     for name, (dx, dy) in FAMILY_LABELS.items():
         ids = ftab.index[ftab.fam_name.eq(name)]
-        if len(ids):
-            m = fam[fam.fam_id.eq(ids[0])]
-            if len(m):
-                y = max(m.sini_p.median() + dy, LABEL_Y_MIN)
-                ax.text(m.a_p.median() + dx, y, name.replace("-", "–"), fontsize=5.2, color=INK,
-                        ha="center", va="center", zorder=3,
-                        bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=.75))
+        m = fam[fam.fam_id.isin(ids)]
+        if len(ids) != 1 or m.empty:
+            raise ValueError(f"proper-element map: the {name} family it labels has ids {list(ids)} and {len(m)} members "
+                             f"with proper elements; expected one family with members")
+        y = max(m.sini_p.median() + dy, LABEL_Y_MIN)
+        ax.text(m.a_p.median() + dx, y, name.replace("-", "–"), fontsize=5.2, color=INK,
+                ha="center", va="center", zorder=3,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=.75))
     mark_structure(ax, snow=False)
     ax.set(xlim=(A_MIN, A_MAX), ylim=(0, top_i), xlabel="proper semimajor axis $a_\\mathrm{P}$ (au)", ylabel="proper sin $i_\\mathrm{P}$")
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=3, markerscale=3.5, handletextpad=.3,
@@ -320,19 +328,23 @@ def robustness_summary(summary: dict, keys: list[str]):
     hl = summary["text_numbers"]["H_limited_IPW_c_fraction_by_zone"]
     dark = summary["dark_fraction_complete"]
     raw, ipw, col, bg = keys
+    # the cuts as the run made them (typed in, a label would go on naming the old cut after a change)
+    dc = f"D ≥ {summary['completeness']['D_complete_km']:.0f} km"
+    dca = f"D ≥ {summary['completeness']['D_complete_albedo_km']:.0f} km"
+    di = f"D ≥ {D_IPW:.0f} km"
     point = lambda v: {z: (v[z], None, None) for z in ZONE_NAMES}
     rows = [("raw count", {z: _cell(nar[z][raw]) for z in ZONE_NAMES}, True),
-            ("collapsed, IPW, D ≥ 10 km", {z: _cell(nar[z][ipw]) for z in ZONE_NAMES}, True),
-            ("collapsed, D ≥ 53 km", {z: _cell(nar[z][col]) for z in ZONE_NAMES}, True),
-            ("background, D ≥ 53 km", {z: _cell(nar[z][bg]) for z in ZONE_NAMES}, True),
-            ("IPW, H < 15 (brightness-limited)", point(hl), False),
-            ("IPW, D ≥ 10 km, families extended", {z: _cell(ext[z][ipw]) for z in ZONE_NAMES}, False),
-            ("D ≥ 53 km, families extended", {z: _cell(ext[z][col]) for z in ZONE_NAMES}, False),
-            ("broad, IPW, D ≥ 10 km", {z: _cell(bro[z][ipw]) for z in ZONE_NAMES}, False),
-            ("broad, D ≥ 53 km", {z: _cell(bro[z][col]) for z in ZONE_NAMES}, False),
+            (f"collapsed, IPW, {di}", {z: _cell(nar[z][ipw]) for z in ZONE_NAMES}, True),
+            (f"collapsed, {dc}", {z: _cell(nar[z][col]) for z in ZONE_NAMES}, True),
+            (f"background, {dc}", {z: _cell(nar[z][bg]) for z in ZONE_NAMES}, True),
+            (f"IPW, H < {H_IPW_MAX:.0f} (brightness-limited)", point(hl), False),
+            (f"IPW, {di}, families extended", {z: _cell(ext[z][ipw]) for z in ZONE_NAMES}, False),
+            (f"{dc}, families extended", {z: _cell(ext[z][col]) for z in ZONE_NAMES}, False),
+            (f"broad, IPW, {di}", {z: _cell(bro[z][ipw]) for z in ZONE_NAMES}, False),
+            (f"broad, {dc}", {z: _cell(bro[z][col]) for z in ZONE_NAMES}, False),
             ("broad, dark X as P, IPW", point({z: xs[ipw][z] for z in ZONE_NAMES}), False),
-            ("broad, dark X as P, D ≥ 53 km", point({z: xs[col][z] for z in ZONE_NAMES}), False),
-            ("albedo only, $p_\\mathrm{V}$ < 0.10, D ≥ 33 km", point(dark), False)]
+            (f"broad, dark X as P, {dc}", point({z: xs[col][z] for z in ZONE_NAMES}), False),
+            (f"albedo only, $p_\\mathrm{{V}}$ < {DARK_ALBEDO:.2f}, {dca}", point(dark), False)]
     fig, ax = _fig(COL_W, 3.15)
     ys, labs, main = [], [], []
     y = 0.0
@@ -454,11 +466,15 @@ ALBEDO_GROUPS = ["S-like", "C-like", "D/P", "X"]
 
 def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
     """Measured geometric albedo of the bodies with a published taxonomy, by group (normalised histograms)."""
-    t = mb[mb.tier.eq("taxonomy") & mb.albedo.notna() & (mb.albedo > 0)]
+    t = mb[mb.tier.eq("taxonomy") & mb.albedo.notna()]
     bins = np.logspace(-2, 0, 61)
+    out = t[~t.albedo.between(bins[0], bins[-1], inclusive="both")]     # a histogram would drop them
+    if len(out):
+        raise ValueError(f"albedo figure: {len(out)} measured albedos outside [{bins[0]}, {bins[-1]}]: "
+                         f"{out.albedo.head(5).tolist()}")
     fig, ax = _fig(COL_W, 2.0)
     for g in ALBEDO_GROUPS:
-        a = t.loc[t.group.eq(g), "albedo"].clip(1e-2, .999)
+        a = t.loc[t.group.eq(g), "albedo"]
         ax.hist(a, bins=bins, density=True, histtype="step", lw=1.0, color=COLORS[g], label=_math(f"{g} (n = {len(a):,})"))
     ax.axvline(cuts[0], color=INK2, lw=.7)
     ax.axvline(cuts[1], color=INK2, lw=.6, ls=":")

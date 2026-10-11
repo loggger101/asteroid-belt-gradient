@@ -121,8 +121,9 @@ def test_complete_limit_finds_first_incomplete_bin():
     k = int(np.searchsorted(H_EDGES, 10.5))
     comp.iloc[k:, 2] = 0.9                           # one zone drops below 95% at H = 10.5
     assert complete_limit(comp, n) == 10.5
-    comp.iloc[:, :] = 1.0                            # complete everywhere: the faintest edge
-    assert complete_limit(comp, n) == H_EDGES[-1]
+    comp.iloc[:, :] = 1.0                            # complete everywhere: the limit is beyond the bins, not known
+    with pytest.raises(ValueError, match="lies beyond H_EDGES"):
+        complete_limit(comp, n)
 
 
 def test_logistic_recovers_crossover():

@@ -87,12 +87,15 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     mem = []
     for f in sorted(glob(str(data / "families_2015" / "*.tab"))):
+        fid = Path(f).stem.split("_")[0]                     # 401_vesta.tab lists family 401
         for i, line in enumerate(_lines(f), 1):
             t = line.split()
             if not t:
                 continue
             if len(t) < 7:
                 raise ValueError(f"{Path(f).name} line {i}: {len(t)} fields, expected at least 7: {line.strip()!r}")
+            if t[6] != fid:
+                raise ValueError(f"{Path(f).name} line {i} names family {t[6]}, not {fid}: {line.strip()!r}")
             mem.append((t[0], f"2015_{t[6]}"))
     mem15 = pd.DataFrame(mem, columns=["key", "fam_id"])
     listed, with_members = set(fams15.fam_id), set(mem15.fam_id)
@@ -108,6 +111,8 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         m = re.match(r"^(\d+|--)\s+(.*?)\s+(\d+)\s+(\d+)(\s+\S+)?\s*$", line.strip())
         if m:
             key = m[1] if m[1] != "--" else m[2].replace(" ", "").lower()
+            if key in cut24:
+                raise ValueError(f"list_of_new_families_2024.txt lists parent {key} twice: {cut24[key]} and {line.strip()!r}")
             cut24[key] = (m[2], float(m[3]))
     rows, mem, used = [], [], set()
     for f in sorted(glob(str(data / "families_2024" / "*.csv"))):
@@ -122,6 +127,9 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         fid = f"2024_{stem}"
         rows.append(dict(fam_id=fid, parent_num=pnum, fam_name=name, cutoff=cut))
         x = pd.read_csv(f, header=None, dtype=str)
+        if x.shape[1] != 9 or x[8].isna().any():
+            raise ValueError(f"families_2024/{stem}.csv: expected 9 fields per line with the designation last; found "
+                             f"{x.shape[1]} columns and {int(x[x.columns[-1]].isna().sum())} lines without a last field")
         mem += [(k, fid) for k in x[8]]
     if set(cut24) != used:
         raise ValueError(f"list_of_new_families_2024.txt lists families without a member file: {sorted(set(cut24) - used)}")
@@ -133,7 +141,8 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         raise ValueError(f"family ids listed twice: {fams.fam_id[fams.fam_id.duplicated()].tolist()}")
     members = pd.concat([mem15, mem24], ignore_index=True)
     members["key"] = norm_key(members["key"])
-    fams["n_listed"] = fams.fam_id.map(members.fam_id.value_counts()).fillna(0).astype(int)
+    # every family has members (checked above); a NaN here could not be cast to int, so it would raise, not count 0
+    fams["n_listed"] = fams.fam_id.map(members.fam_id.value_counts()).astype(int)
 
     # de-duplicate: a body in two families (e.g. Karin inside Koronis) goes to the larger one. Equal
     # sizes go to the lower fam_id, so identical lists count once: in the bundle, 529 Vibilia's file
@@ -147,6 +156,10 @@ def load_families(nesvorny: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 def load_proper_elements(nesvorny: Path) -> pd.DataFrame:
     pc = pd.read_csv(nesvorny / "data" / "proper_catalog24.tab", sep=r"\s+", header=None, dtype={10: str, 11: str},
                      usecols=[0, 2, 4, 8, 11], names=["a_p", "e_p", "sini_p", "H_p", "key"])
+    short = pc.isna().any(axis=1)                # a line with fewer fields than the format leaves NaN at its end
+    if short.any():
+        raise ValueError(f"proper_catalog24.tab: {int(short.sum())} lines lack a field, e.g. lines "
+                         f"{(np.flatnonzero(short.values)[:5] + 1).tolist()}")
     pc["key"] = norm_key(pc["key"])
     if not pc.key.is_unique:
         raise ValueError(f"proper_catalog24.tab lists {int(pc.key.duplicated().sum())} designations twice, "

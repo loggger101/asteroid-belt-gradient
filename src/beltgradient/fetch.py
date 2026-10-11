@@ -33,9 +33,11 @@ def sha256(path: Path) -> str:
 
 
 def download(url: str, dest: Path, expected: str) -> None:
-    if dest.exists() and sha256(dest) == expected:
-        print(f"ok        {dest.name}")
-        return
+    if dest.exists():
+        if sha256(dest) == expected:
+            print(f"ok        {dest.name}")
+            return
+        print(f"replace   {dest.name}: its sha256 is not the expected one")     # said, not silently overwritten
     print(f"download  {url}")
     tmp = dest.with_suffix(dest.suffix + ".part")
     # the PDS archive refuses Python's default User-Agent. The timeout is per socket operation: a

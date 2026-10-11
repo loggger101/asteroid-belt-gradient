@@ -6,6 +6,7 @@ result. Reordering them changes the bootstrap intervals (not the point estimates
 from __future__ import annotations
 
 import json
+import warnings
 from dataclasses import dataclass, field
 
 import matplotlib.pyplot as plt
@@ -54,17 +55,57 @@ class Results:
 
 def _weighted_c_fraction(s: pd.DataFrame, w: str, lo: float, hi: float, which: str = "narrow") -> float:
     s = s[s.semi_major_axis_au.between(lo, hi, inclusive="right") & s.group.isin(DEN[which])]
-    return round(float((s[w] * s.group.isin(NUM[which])).sum() / s[w].sum()), 4) if len(s) else None
+    if s[w].sum() <= 0:
+        raise ValueError(f"no weighted {which}-fraction body with {lo} < a <= {hi} au: the fraction is undefined")
+    return round(float((s[w] * s.group.isin(NUM[which])).sum() / s[w].sum()), 4)
 
 
 def dp_share_outer(s: pd.DataFrame) -> pd.Series:
-    """D/P share of a sample (normally the size-complete collapsed one) per 0.1 AU bin, from 2.9 AU outward (Fig. 5)."""
+    """D/P share of a sample (normally the size-complete collapsed one) per 0.1 AU bin, from 2.9 AU outward (Fig. 5).
+
+    An empty bin has no share, and its NaN would drop out of a min or max unnoticed: that raises.
+    """
     edges = np.arange(A_MIN, A_MAX + 1e-9, 0.1)
     st = (s[s.group.isin(GROUP_ORDER)].assign(bin=pd.cut(s.semi_major_axis_au, edges))
           .pivot_table(index="bin", columns="group", values="w", aggfunc="sum", observed=False)
           .reindex(columns=GROUP_ORDER, fill_value=0.0).fillna(0.0))       # a group absent from a bin weighs 0
     dp = st["D/P"].div(st.sum(axis=1))
-    return dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
+    dp = dp[[iv.left >= 2.9 - 1e-9 for iv in dp.index]]
+    if dp.isna().any():
+        raise ValueError(f"D/P share: no body in the bins {[str(iv) for iv in dp.index[dp.isna()]]}")
+    return dp
+
+
+def _finite(x, what: str):
+    """``x`` (a number or a frame), unchanged; a NaN in it raises, naming ``what``.
+
+    pandas' min and max skip NaN, so a range taken over a frame with an empty cell would silently shrink.
+    """
+    if np.isnan(np.asarray(x, dtype=float)).any():
+        raise ValueError(f"{what}: NaN where every value must be defined:\n{x}")
+    return x
+
+
+def _family(ftab: pd.DataFrame, name: str) -> str:
+    """The id of the one family called ``name``; none, or two, raises."""
+    ids = ftab.index[ftab.fam_name.eq(name)]
+    if len(ids) != 1:
+        raise ValueError(f"expected one family named {name!r} with main-belt members, found {list(ids)}")
+    return ids[0]
+
+
+def assumed_albedo_steps(mb: pd.DataFrame) -> pd.DataFrame:
+    """Per albedo the catalog assumed for an assumed-tier label: the min and max a it covers, and how many labels.
+
+    A label whose diameter is measured has no assumed albedo (the catalog needed none for its size): 23 in
+    data-2026-09-29c, which the table leaves out. Any other assumed-tier label without one is a defect, and raises.
+    """
+    asm = mb[mb.tier.eq("assumed")]
+    unexplained = asm.albedo_assumed_for_diameter.isna() & asm.diameter_source.ne("measured")
+    if unexplained.any():
+        raise ValueError(f"{int(unexplained.sum())} assumed-albedo labels have neither an assumed albedo nor a measured "
+                         f"diameter, e.g. {asm.designation[unexplained].head(5).tolist()}")
+    return asm.groupby("albedo_assumed_for_diameter").semi_major_axis_au.agg(["min", "max", "size"])
 
 
 def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> dict:
@@ -74,7 +115,7 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
     """
     tax = mb[mb.tier.eq("taxonomy")]
     point = lambda zt: zt.apply(lambda col: col.str.split(" ").str[0].astype(float))
-    gap = point(zt_broad) - point(zt_narrow)
+    gap = _finite(point(zt_broad) - point(zt_narrow), "broad minus narrow zone fractions")
 
     # mass: shares of all classified mass, and S/(S+C) vs S/(all) in the inner belt
     top4 = t_mass.nlargest(4, "estimated_mass_kg")
@@ -86,15 +127,14 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
     h_lim = collapsed(mb, ftab)
     h_lim = h_lim[h_lim.tier.eq("taxonomy") & (h_lim.w_ipw > 0)]
 
-    comp_h14 = comp.loc[[iv for iv in comp.index if 13.5 <= iv.left < 14.5]]
+    comp_h14 = _finite(comp.loc[[iv for iv in comp.index if 13.5 <= iv.left < 14.5]], "completeness at 13.5 <= H < 14.5")
     ipw_pool = mb[mb.tier.eq("taxonomy") & (mb.diameter_km >= D_IPW)]
 
     # the albedo the catalog assumed for each assumed-tier label, and the range of a it covers (Fig. 2)
-    asm = mb[mb.tier.eq("assumed")].groupby("albedo_assumed_for_diameter").semi_major_axis_au.agg(["min", "max", "size"])
+    asm = assumed_albedo_steps(mb)
     # families the Limitations section names
-    fam = lambda name: ftab.index[ftab.fam_name.eq(name)][0]
-    eos = ftab.loc[fam("Eos")]
-    flora_top2 = mb[mb.fam_id.eq(fam("Flora"))].nlargest(2, "diameter_km")
+    eos = ftab.loc[_family(ftab, "Eos")]
+    flora_top2 = mb[mb.fam_id.eq(_family(ftab, "Flora"))].nlargest(2, "diameter_km")
     return {
         "n_main_belt_by_label_tier": {k: int(v) for k, v in mb.tier.value_counts().items()},
         "assumed_tier_albedo_by_a": {f"{p:.3f}": {"a_min": round(float(r["min"]), 3), "a_max": round(float(r["max"]), 3), "n": int(r["size"])}
@@ -106,7 +146,7 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "taxonomy_tier_family_fraction": round(float(tax.in_family.mean()), 4),
         "families_with_main_belt_members": int(len(ftab)),
         "families_classifiable": int(ftab.fam_group.notna().sum()),
-        "vesta_family_members": int(ftab.loc[ftab.fam_name.eq("Vesta"), "n_members"].iloc[0]),
+        "vesta_family_members": int(ftab.at[_family(ftab, "Vesta"), "n_members"]),
         "n_collapsed_size_complete_all_groups": int(len(samples[keys[2]])),
         "completeness_H13.5_to_14.5_range": [round(float(comp_h14.min().min()), 3), round(float(comp_h14.max().max()), 3)],
         "H_of_10km_dark_body": round(float(5 * np.log10(1329 / (D_IPW * np.sqrt(P_DARKEST)))), 2),
@@ -130,6 +170,14 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
 
 
 def _round(x, nd=4):
+    """``x`` rounded; NaN raises (it would be written as null, and read as a number that was never there)."""
+    if pd.isna(x):
+        raise ValueError("a summary number is NaN (an empty sample or bin); see the traceback for which")
+    return round(float(x), nd)
+
+
+def _round_cell(x, nd=4):
+    """As :func:`_round`, but NaN is null: for the size-distance map, whose sparse cells are blank by design."""
     return None if pd.isna(x) else round(float(x), nd)
 
 
@@ -161,8 +209,7 @@ def x_split_by_albedo(mb, fams, ftab, samples, keys, d_c) -> dict:
         "n_split": int(len(xa)),
         "n_split_by_class": {c: int((xa.x_albedo_class == c).sum()) for c in ["P", "M", "E"]},
         "split_by_zone": {z: {c: int(by_zone.at[z, c]) for c in ["P", "M", "E"]} for z in ZONE_NAMES},
-        "P_share_of_split_by_zone": {z: _round(by_zone.at[z, "P"] / by_zone.loc[z].sum()) if by_zone.loc[z].sum() else None
-                                     for z in ZONE_NAMES},
+        "P_share_of_split_by_zone": {z: _round(by_zone.at[z, "P"] / by_zone.loc[z].sum()) for z in ZONE_NAMES},
         "families_reclassified": int(changed.sum()),
         "zone_c_fraction_broad": zones(sx, "broad"),
         "zone_c_fraction_narrow": zones(sx, "narrow"),
@@ -187,6 +234,9 @@ def snow_line_track_numbers(cuts=(A_MAX, 2.5, A_MIN)) -> dict:
     """Equation (1) along the BHAC15 1 M_sun track: when the snow line first lies inside each radius, and its minimum."""
     t, logl = np.array(TRACK_1MSUN, dtype=float).T
     age, r = 10 ** t / 1e6, SNOW_LINE_AU * 10 ** (logl / 2)
+    never = [c for c in cuts if not (r < c).any()]
+    if never:                                    # argmax of an all-False array is 0: the track's start, not an answer
+        raise ValueError(f"the snow line on the track never lies inside {never} au")
     k = int(np.argmin(r))
     return {"first_inside_au_myr": {f"{c:.1f}": _round(age[np.argmax(r < c)], 2) for c in cuts},
             "min_au": _round(r[k], 2), "age_at_min_myr": _round(age[k], 1),
@@ -199,8 +249,14 @@ def _log(verbose, *a):
 
 
 def run(paths: Paths | None = None, *, write: bool = True, verbose: bool = True) -> Results:
-    """The whole analysis. Its Matplotlib style applies to the run only, not to the caller."""
-    with plt.rc_context(RCPARAMS):
+    """The whole analysis. Its Matplotlib style applies to the run only, not to the caller.
+
+    Inside the run every warning is an error: a NumPy "Mean of empty slice", a pandas downcast or a Matplotlib
+    layout warning marks a defect, and printed to the console it would scroll by while the run wrote its outputs.
+    The caller's warning filters are restored afterwards.
+    """
+    with plt.rc_context(RCPARAMS), warnings.catch_warnings():
+        warnings.simplefilter("error")
         return _run(paths or Paths.default(), write, verbose)
 
 
@@ -306,7 +362,7 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
     a_e, d_e, f_ad, n_ad = size_distance_grid(samples[keys[1]])
     size_map = {"sample": keys[1], "a_edges_au": [float(v) for v in a_e],
                 "d_edges_km": [None if np.isinf(v) else float(v) for v in d_e],
-                "c_fraction": [[_round(v, 3) for v in row] for row in f_ad], "n": [[int(v) for v in row] for row in n_ad]}
+                "c_fraction": [[_round_cell(v, 3) for v in row] for row in f_ad], "n": [[int(v) for v in row] for row in n_ad]}
 
     # 9h · sample sizes (Fig. 3), measured albedo by taxonomic group (Fig. 12), the snow line along BHAC15 (Fig. 1)
     sample_sizes = {"raw": int(len(samples[keys[0]])), "collapsed_ipw": int(len(samples[keys[1]])),
@@ -347,16 +403,20 @@ def _run(paths: Paths, write: bool, verbose: bool) -> Results:
 
     # 11 · figures drawn only from the numbers above (no RNG)
     save("size_map", F.size_distance_map(samples[keys[1]]))
-    save("crossover", F.crossover_fits(xo))
+    save("crossover", F.crossover_fits(xo, D_C))
     save("proper", F.proper_element_map(mb, orb, ftab))
     save("robustness", F.robustness_summary(summary, keys))
     save("snow_line", F.snow_line_track(TRACK_1MSUN, (xo.a50.iloc[1:].min(), xo.a50.iloc[1:].max())))
     save("flow", F.sample_flow(summary, keys))
     save("albedo_groups", F.albedo_by_group(mb, X_SPLIT_ALBEDO))
 
+    # serialised whether or not it is written, so --no-write checks it too. allow_nan=False: a NaN that got this far
+    # is a defect, and json.dumps would otherwise write it as NaN, which is not JSON; a numpy number (not plain
+    # JSON either) raises TypeError.
+    summary_json = json.dumps(summary, indent=2, allow_nan=False)
     if write:
         # "\n" on every platform, so a run reproduces the committed file byte for byte
-        (paths.results / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8", newline="\n")
+        (paths.results / "summary.json").write_text(summary_json, encoding="utf-8", newline="\n")
         _log(verbose, f"wrote {paths.results / 'summary.json'} and {len(FIGURE_FILES)} figures to {paths.figures}")
 
     return Results(

@@ -48,7 +48,7 @@ def shape(x):
 def test_every_output_is_written(result):
     for name, _ in FIGURE_FILES.values():
         assert (result.paths.figures / name).read_bytes()[:8] == b"\x89PNG\r\n\x1a\n", name
-    assert result.summary == json.loads(json.dumps(result.res.summary, default=str))
+    assert result.summary == json.loads(json.dumps(result.res.summary, allow_nan=False))   # plain JSON, nothing coerced
 
 
 def test_summary_has_the_structure_of_the_committed_one(result):
@@ -61,8 +61,8 @@ def test_selection_and_families(result):
     assert (s["catalog"]["rows"], s["catalog"]["main_belt"]) == (e["rows"], e["main_belt"])
     assert s["families"]["n_families"] == e["n_families"]
     # Karin (nested in Koronis), Vibilia (Leonidas's list again) and Hilda (beyond 3.3 AU) keep no main-belt member
-    assert set(result.res.tables["families"].fam_name) == {"Vesta", "Flora", "Themis", "Koronis", "Eos", "Leonidas",
-                                                           "Irma", "2012 PM61"}
+    assert set(result.res.tables["families"].fam_name) == {"Vesta", "Flora", "Nysa-Polana", "Eunomia", "Hygiea", "Themis",
+                                                           "Koronis", "Eos", "Leonidas", "Irma", "2012 PM61"}
     assert s["text_numbers"]["vesta_family_members"] == e["vesta_members"]
     assert [b["name"] for b in s["text_numbers"]["flora_family_two_largest"]] == ["Metis", "Flora"]
     assert s["families"]["extension_attaches"] >= e["n_halo"]
@@ -184,3 +184,100 @@ def test_the_robustness_figure_refuses_a_missing_estimate(result):
     s["zone_c_fraction_narrow"]["pristine"][keys[0]] = "nan [nan–nan] (n=0)"
     with pytest.raises(ValueError, match="not a zone fraction"):
         figures.robustness_summary(s, keys)
+
+
+# ── inside a run, nothing goes by on the console: a warning is an error, a NaN never reaches the summary ─
+
+def test_a_warning_inside_the_run_is_an_error(result, monkeypatch):
+    from beltgradient import pipeline
+    real = pipeline.load_catalog
+
+    def warns(path):
+        warnings.warn("planted", UserWarning)
+        return real(path)
+
+    monkeypatch.setattr(pipeline, "load_catalog", warns)
+    monkeypatch.delenv("BELT_GRADIENT_DATA", raising=False)
+    filters = list(warnings.filters)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")                 # however the caller treats warnings
+        with pytest.raises(UserWarning, match="planted"):
+            run(result.paths, write=False, verbose=False)
+    assert list(warnings.filters) == filters
+
+
+def test_a_nan_in_the_summary_raises_even_without_writing(result, monkeypatch, tmp_path):
+    from beltgradient import pipeline
+    monkeypatch.setattr(pipeline, "snow_line_track_numbers", lambda: {"min_au": float("nan")})
+    monkeypatch.delenv("BELT_GRADIENT_DATA", raising=False)
+    with pytest.raises(ValueError, match="Out of range float values are not JSON compliant"):
+        run(result.paths, write=False, verbose=False)
+
+
+# ── figures: labels come from the run, and what a figure claims to show must be there ────────────────
+
+def test_the_crossover_figure_labels_come_from_the_samples(result):
+    from beltgradient import figures
+    xo, d_c = result.res.tables["crossover"], result.summary["completeness"]["D_complete_km"]
+    fig = figures.crossover_fits(xo, d_c)
+    labels = [t.get_text() for t in fig.axes[1].get_yticklabels()]
+    assert labels == [figures._math(s) for s in ["background", f"D ≥ {d_c:.0f} km", "IPW, D ≥ 10 km", "raw"]]
+    plt.close(fig)
+    with pytest.raises(ValueError, match="crossover figure: expected the samples"):
+        figures.crossover_fits(xo, d_c + 5)             # a fit table from other cuts than the labels name
+    with pytest.raises(ValueError, match="crossover figure: expected the samples"):
+        figures.crossover_fits(xo.iloc[:3], d_c)        # a sample missing
+
+
+def test_the_robustness_figure_names_the_runs_cuts(result):
+    import copy
+    from beltgradient import figures
+    keys = list(result.summary["zone_c_fraction_narrow"]["inner"])
+    s = copy.deepcopy(result.summary)
+    s["completeness"]["D_complete_km"], s["completeness"]["D_complete_albedo_km"] = 61.2, 44.4
+    fig = figures.robustness_summary(s, keys)
+    labels = " | ".join(t.get_text() for t in fig.axes[0].get_yticklabels())
+    plt.close(fig)
+    assert "$D$ ≥ 61 km, families extended" in labels and "$D$ ≥ 44 km" in labels
+    assert "53 km" not in labels and "33 km" not in labels
+
+
+def test_the_proper_element_map_refuses_a_missing_labelled_family(result):
+    from beltgradient import figures
+    ftab = result.res.tables["families"].copy()
+    ftab["fam_name"] = ftab.fam_name.replace("Eunomia", "Renamed")
+    with pytest.raises(ValueError, match=r"the Eunomia family it labels has ids \[\] and 0 members"):
+        figures.proper_element_map(result.res.frames["main_belt"], result.res.frames["orbit_sample"], ftab)
+
+
+@pytest.mark.parametrize("bad", [0.0, 0.005, 1.2])
+def test_the_albedo_figure_refuses_values_off_its_axis(result, bad):
+    from beltgradient import figures
+    mb = result.res.frames["main_belt"].copy()
+    i = mb.index[mb.tier.eq("taxonomy") & mb.albedo.notna()][0]
+    mb.loc[i, "albedo"] = bad
+    with pytest.raises(ValueError, match="albedo figure: 1 measured albedos outside"):
+        figures.albedo_by_group(mb, (0.10, 0.30))
+
+
+# ── the walkthrough and the committed summary stay in step with the code ─────────────────────────────
+
+def test_the_walkthrough_runs(result, monkeypatch, capsys):
+    import importlib.util
+    path = Path(__file__).resolve().parents[1] / "examples" / "walkthrough.py"
+    spec = importlib.util.spec_from_file_location("walkthrough", path)
+    walk = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(walk)
+    monkeypatch.setattr(walk, "run", lambda paths, write: result.res)      # the run above, not the real inputs
+    walk.main()
+    out = capsys.readouterr().out
+    for title in ["Label provenance", "Collisional families", "S/C crossover", "Orbital excitation",
+                  "one-step family extension"]:
+        assert title in out, title
+
+
+def test_the_committed_summary_is_from_this_version():
+    committed = json.loads(COMMITTED_SUMMARY.read_text(encoding="utf-8"))["software"]
+    from beltgradient.config import SEED
+    assert committed == {"beltgradient": beltgradient.__version__, "seed": SEED}, \
+        "results/summary.json was not regenerated after the version or the seed changed: run `belt-gradient run`"

@@ -70,6 +70,10 @@ def check_source(tex, bib, repo):
     for m in re.finditer(r"\\textit\{([A-Za-z])\}", body):
         if m.group(1) not in GROUPS_ITALIC:
             fail(f"main.tex:{line_of(src, src.index(body) + m.start())}: \\textit{{{m.group(1)}}} looks like a variable; use ${m.group(1)}$")
+    # 1b. a command that lost its backslash prints its own name ("mbox{C-types}" -> "mboxC-types")
+    for m in re.finditer(r"(?<![\\\w])(mbox|citealt|citet|citep|citetalias|ref|textit|textbf|url)\{", body):
+        fail(f"main.tex:{line_of(src, src.index(body) + m.start())}: '{m.group(1)}{{' without its backslash; "
+             f"write \\{m.group(1)}{{")
 
     # 2. units: au (not AU), and a tie between number and unit
     for m in re.finditer(r"\bAU\b", body):

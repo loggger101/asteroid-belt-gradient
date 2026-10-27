@@ -31,6 +31,8 @@ the standards set by the formatting audit of 2026-10-09/10:
 
 - math as real math (`$D \geq 10$~km`), never `\textsubscript`, `\textless` or `\ensuremath{\geq}` fragments;
   label subscripts upright (`e_{\mathrm{P}}`)
+- no command that has lost its backslash (`mbox{C-types}` prints "mboxC-types"; checked for `\mbox`,
+  the `\cite` forms, `\ref`, `\textit`, `\textbf` and `\url`)
 - "au", not "AU"; `~` between a number and its unit
 - `Figure~\ref{fig:N}`, `Section~\ref{sec:4.6}`, `Equation~(\ref{eq:1})`: no hard-coded numbers; every
   `\ref` resolves; every figure and table is cited, in numerical order

@@ -44,6 +44,8 @@ SOURCE_DEFECTS = [
     ("unresolved \\ref", lambda t, b: (plant(t, INTRO, "Figure~\\ref{fig:99}. " + INTRO), b), "has no \\label"),
     ("text-mode subscript", lambda t, b: (plant(t, INTRO, "a\\textsubscript{50}. " + INTRO), b), "text-mode math fragment"),
     ("\\textit variable", lambda t, b: (plant(t, INTRO, "\\textit{a} grows. " + INTRO), b), "looks like a variable"),
+    ("command without its backslash", lambda t, b: (plant(t, INTRO, "mbox{C-types} grow. " + INTRO), b),
+     "without its backslash"),
     ("em dash", lambda t, b: (plant(t, INTRO, "a---b. " + INTRO), b), "em dash"),
     ("British spelling", lambda t, b: (plant(t, "analyzed", "analysed"), b), "British spelling"),
     ("first person", lambda t, b: (plant(t, INTRO, "We note this. " + INTRO), b), "first-person"),

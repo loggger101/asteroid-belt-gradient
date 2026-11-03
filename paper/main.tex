@@ -66,17 +66,22 @@ Two consequences follow for the asteroid belt. First, the ice line sweeps throug
 \subsection{Five scenarios}\label{sec:2.3}
 Table~\ref{tab:1} summarizes the predictions this paper can test. The scenarios are not mutually exclusive; the capture proposed by \citet{levison2009} could have occurred in addition to either implantation model.
 
-\begin{deluxetable*}{>{\raggedright\arraybackslash}p{1.5in}>{\raggedright\arraybackslash}p{2.0in}>{\raggedright\arraybackslash}p{3.15in}}
+% Each cell sets its own width (\cellA-\cellC): under LaTeX 2025-11-01, a p{} column in a deluxetable stops the
+% compile ("Extra \or"), because AASTeX 7.0.1's column-spec parser predates array v2.6.
+\newcommand{\cellA}[1]{\parbox[t]{1.5in}{\raggedright\strut#1\strut}}
+\newcommand{\cellB}[1]{\parbox[t]{2.0in}{\raggedright\strut#1\strut}}
+\newcommand{\cellC}[1]{\parbox[t]{3.15in}{\raggedright\strut#1\strut}}
+\begin{deluxetable*}{lll}
 \tabletypesize{\footnotesize}
 \tablewidth{0pt}
 \tablecaption{Formation scenarios and their observable predictions.\label{tab:1}}
 \tablehead{\colhead{Scenario} & \colhead{Reference} & \colhead{Prediction for the present belt}}
 \startdata
-Static condensation front & Equation~(\ref{eq:1}) & Narrow S$\rightarrow$C transition near 2.7~au; almost no C-types in the inner belt; composition unrelated to orbital excitation. \\
-Moving snow line, in situ & Section~\ref{sec:2.2} & Broader transition; hydrated bodies in the inner belt possible, but made of inner-disk (NC) material. \\
-Grand Tack & \citet{walsh2011,walsh2012} & Broad overlap: S concentrated inward, C outward, both dynamically excited during implantation. \\
-Empty belt, implanted & \citet{raymond2017a,raymond2017b} & Broad overlap from both directions; C-types share a source with Earth’s water; belt stirred as a whole. \\
-Late contamination & \citet{levison2009}; \citet{vokrouhlicky2016} & \mbox{D-}~and P-types concentrated in the outer belt, Hildas and Trojans.
+\cellA{Static condensation front} & \cellB{Equation~(\ref{eq:1})} & \cellC{Narrow S$\rightarrow$C transition near 2.7~au; almost no C-types in the inner belt; composition unrelated to orbital excitation.} \\
+\cellA{Moving snow line, in situ} & \cellB{Section~\ref{sec:2.2}} & \cellC{Broader transition; hydrated bodies in the inner belt possible, but made of inner-disk (NC) material.} \\
+\cellA{Grand Tack} & \cellB{\citet{walsh2011,walsh2012}} & \cellC{Broad overlap: S concentrated inward, C outward, both dynamically excited during implantation.} \\
+\cellA{Empty belt, implanted} & \cellB{\citet{raymond2017a,raymond2017b}} & \cellC{Broad overlap from both directions; C-types share a source with Earth’s water; belt stirred as a whole.} \\
+\cellA{Late contamination} & \cellB{\citet{levison2009}; \citet{vokrouhlicky2016}} & \cellC{\mbox{D-}~and P-types concentrated in the outer belt, Hildas and Trojans.}
 \enddata
 \end{deluxetable*}
 The static front makes the sharpest prediction, and the asteroid data alone can test it, because the transition should be much narrower than the 1.2~au span of the belt. The moving snow line is harder to test this way, since it predicts a broad transition too. What distinguishes it from the implantation models is the \textit{material} in the inner belt’s C-types, which must be assessed from meteorites.
@@ -170,7 +175,7 @@ Figure~\ref{fig:4} and Table~\ref{tab:2} show the carbonaceous fraction as a fun
 
 The innermost belt, from 2.1 to about 2.3~au, remains mostly S-type after correction. The weighted C-fraction is 0 at 2.1–2.2~au and 0.22 at 2.2–2.3~au, and the complete samples contain only four or five bodies there. There is also a dip in the C-fraction just outside the 3:1 resonance at 2.55~au, visible in both the raw and IPW samples. This is the region of the large S-type Eunomia and Maria families, and the dip probably comes from family “halo” members that the HCM lists do not capture (\citealt{brozmorbidelli2013}; Section~\ref{sec:5.5}).
 
-The broad fraction behaves the same way and is higher by 0.02–0.10 in every zone. Figure~\ref{fig:5} shows all five groups for the complete sample. D/P types are concentrated near and beyond the 7:3 resonance: from 2.9~au outward they make up 14–25\% of large bodies in each 0.1~au bin. X-types are common at every distance, so leaving them out of the S/C ratio is a choice that could matter; Section~\ref{sec:4.6} tests it.
+The broad fraction behaves the same way and is higher by 0.02–0.10 in every zone. Figure~\ref{fig:5} shows all five groups for the complete sample. D/P types are concentrated near and beyond the 7:3 resonance: from 2.9~au outward they make up 13–25\% of large bodies in each 0.1~au bin. X-types are common at every distance, so leaving them out of the S/C ratio is a choice that could matter; Section~\ref{sec:4.6} tests it.
 
 \begin{figure}[htb!]
 \centering

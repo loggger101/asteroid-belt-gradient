@@ -14,10 +14,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # with the tags, so the check can see whether the cited release is tagged
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
       - name: Install TeX Live and the check's PDF reader
@@ -35,7 +35,7 @@ jobs:
         run: python -I check_format.py --build-dir . --untagged-ok
       - name: Upload the PDF
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: paper-pdf
           path: |

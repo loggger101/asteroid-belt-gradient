@@ -141,6 +141,8 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
     fam_shares = {name: {g: _round(v) for g, v in voters[voters.fam_id.eq(_family(ftab, name))].group
                          .value_counts(normalize=True).reindex(voting, fill_value=0.0).items()}
                   for name in ("Eos", "Vesta", "Themis")}
+    # families with no vote and no classified largest member: collapse() leaves them, and their members, out
+    unc = ftab[ftab.fam_group.isna()].sort_values("D_equiv_km", ascending=False)
     return {
         "n_main_belt_by_label_tier": {k: int(v) for k, v in mb.tier.value_counts().items()},
         "assumed_tier_albedo_by_a": {f"{p:.3f}": {"a_min": round(float(r["min"]), 3), "a_max": round(float(r["max"]), 3), "n": int(r["size"])}
@@ -153,6 +155,12 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "taxonomy_tier_family_fraction": round(float(tax.in_family.mean()), 4),
         "families_with_main_belt_members": int(len(ftab)),
         "families_classifiable": int(ftab.fam_group.notna().sum()),
+        "families_unclassifiable": {"n": int(len(unc)), "n_members": int(unc.n_members.sum()),
+                                    f"n_D_equiv_ge_{D_IPW:.0f}km": int((unc.D_equiv_km >= D_IPW).sum()),
+                                    # whole km, as §3.3 prints them (85.497 to one decimal would print 86)
+                                    "largest": unc.fam_name.iloc[0] if len(unc) else None,
+                                    "largest_D_equiv_km": round(float(unc.D_equiv_km.iloc[0])) if len(unc) else None,
+                                    "second_largest_D_equiv_km": round(float(unc.D_equiv_km.iloc[1])) if len(unc) > 1 else None},
         "vesta_family_members": int(ftab.at[_family(ftab, "Vesta"), "n_members"]),
         "n_collapsed_size_complete_all_groups": int(len(samples[keys[2]])),
         "completeness_H13.5_to_14.5_range": [round(float(comp_h14.min().min()), 3), round(float(comp_h14.max().max()), 3)],

@@ -274,6 +274,9 @@ def _prose() -> dict[str, str]:
         "albedo complete limit": f"gives a complete sample for $D \\geq {S['completeness']['D_complete_albedo_km']:.0f}$~km",
         "dark C and S": f"{pct(S['albedo_by_group']['C-like']['frac_below_0.10'])} of the C-like and "
                         f"{pct(S['albedo_by_group']['S-like']['frac_below_0.10'])} of the S-like bodies are darker than 0.10",
+        "K/L albedo": f"their median albedo is {S['albedo_by_group']['K/L']['median_pV']:.2f}, against "
+                      f"{S['albedo_by_group']['S-like']['median_pV']:.2f} and {S['albedo_by_group']['C-like']['median_pV']:.2f}, "
+                      f"and {pct(S['albedo_by_group']['K/L']['frac_below_0.10'])} of them are darker than 0.10",
         "X split counts": f"Of the {xs['n_taxonomy_X_group']:,} classified X-complex bodies, {xs['n_split']:,} have a measured albedo",
         "X split P-like": f"and {xs['n_split_by_class']['P']:,} of these are P-like",
         "X split P share": f"lower in the inner belt ({p_share['inner']:.2f}) than beyond it ({span([p_share[z] for z in ZONES[1:]])})",
@@ -303,7 +306,8 @@ def test_no_share_the_paper_prints_as_a_percentage_is_stored_on_a_half_percent()
     shares = (t["dp_share_per_0.1AU_bin_from_2.9AU"] + t["completeness_H13.5_to_14.5_range"]
               + list(t["mass_share_of_classified"].values()) + [mc["inner"], mc["middle"]]
               + [t[k] for k in ("assumed_label_fraction", "measured_share_of_classified_mass", "inner_mass_S_of_S_plus_C",
-                                "derived_diameter_fraction_taxonomy")])
+                                "derived_diameter_fraction_taxonomy")]
+              + [SUMMARY["albedo_by_group"][g]["frac_below_0.10"] for g in ("S-like", "C-like", "K/L")])
     for v in shares:
         halves = round(v * 200, 6)                     # a whole number of half percents
         assert not (halves.is_integer() and int(halves) % 2 == 1), f"{v} is stored on a half percent"

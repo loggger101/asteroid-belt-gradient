@@ -707,6 +707,26 @@
       "purity": 0.44,
       "n_labelled": 3166
     },
+    "family_voter_group_shares": {
+      "Eos": {
+        "C-like": 0.2982,
+        "D/P": 0.0711,
+        "K/L": 0.1946,
+        "S-like": 0.4362
+      },
+      "Vesta": {
+        "C-like": 0.0628,
+        "D/P": 0.004,
+        "K/L": 0.0066,
+        "S-like": 0.9267
+      },
+      "Themis": {
+        "C-like": 0.9236,
+        "D/P": 0.0162,
+        "K/L": 0.0039,
+        "S-like": 0.0563
+      }
+    },
     "flora_family_two_largest": [
       {
         "name": "Metis",

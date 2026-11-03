@@ -65,7 +65,7 @@ SOURCE_DEFECTS = [
     ("surname missing from \\hyphenation", lambda t, b: (plant(t, " Walsh ", " "), b), "missing from \\hyphenation"),
     ("loose lines hidden", lambda t, b: (plant(t, "\\hbadness=1000", ""), b), "hbadness=1000"),
     ("journal spelled out", lambda t, b: (t, plant(b, "journal = {\\apj}", "journal = {The Astrophysical Journal}")), "spelled out"),
-    ("cited versions disagree", lambda t, b: (t, plant(b, "version = {v2.6.3,}", "version = {v2.6.2,}")), "cited code version disagrees"),
+    ("cited versions disagree", lambda t, b: (t, plant(b, "version = {v2.6.4,}", "version = {v2.6.3,}")), "cited code version disagrees"),
 ]
 
 

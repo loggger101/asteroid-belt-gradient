@@ -157,7 +157,7 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
         "innermost_n_S_plus_C_size_complete_2.1-2.3": {k: int((samples[k].semi_major_axis_au.between(2.1, 2.3, inclusive="right")
                                                               & samples[k].group.isin(["S-like", "C-like"])).sum()) for k in keys[2:]},
         "broad_minus_narrow_range": [round(float(gap.min().min()), 2), round(float(gap.max().max()), 2)],
-        "dp_share_per_0.1AU_bin_from_2.9AU": [round(float(dp_outer.min()), 3), round(float(dp_outer.max()), 3)],
+        "dp_share_per_0.1AU_bin_from_2.9AU": [round(float(dp_outer.min()), 4), round(float(dp_outer.max()), 4)],
         "derived_diameter_fraction_taxonomy": round(float(tax.diameter_source.ne("measured").mean()), 4),
         "n_classified_with_measured_mass": int(t_mass.mass_measured.astype(bool).sum()),
         "measured_share_of_classified_mass": round(float(t_mass.estimated_mass_kg[t_mass.mass_measured.astype(bool)].sum() / t_mass.estimated_mass_kg.sum()), 4),
@@ -215,7 +215,7 @@ def x_split_by_albedo(mb, fams, ftab, samples, keys, d_c) -> dict:
         "zone_c_fraction_narrow": zones(sx, "narrow"),
         "max_abs_change_broad": max_change("broad"),
         "max_abs_change_narrow": max_change("narrow"),
-        "dp_share_per_0.1AU_bin_from_2.9AU": [_round(dp_outer.min(), 3), _round(dp_outer.max(), 3)],
+        "dp_share_per_0.1AU_bin_from_2.9AU": [_round(dp_outer.min()), _round(dp_outer.max())],
     }
 
 

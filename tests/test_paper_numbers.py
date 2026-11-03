@@ -196,7 +196,7 @@ def _prose() -> dict[str, str]:
     no4 = [mc["no_big4"][z] for z in ZONES]
     p_share = xs["P_share_of_split_by_zone"]
     snow, track = t["snow_line_au_on_bhac15_1msun_track"], S["snow_line_track"]["first_inside_au_myr"]
-    comp14 = t["completeness_H13.5_to_14.5_range"]
+    comp14, dp = t["completeness_H13.5_to_14.5_range"], t["dp_share_per_0.1AU_bin_from_2.9AU"]
     n_dropped = t["ipw_D10_bodies_dropped_by_bin_cuts"]
     n_inner_complete = re.search(r"n=(\d+)", S["zone_c_fraction_narrow"]["inner"][KEYS[2]]).group(1)
     sl = S["snow_line_au"]
@@ -235,6 +235,7 @@ def _prose() -> dict[str, str]:
                                      + (WORDS[n_lo] if n_lo == n_hi else f"{WORDS[n_lo]} or {WORDS[n_hi]}") + " bodies there",
         "broad minus narrow (4.1)": f"is higher by {span(t['broad_minus_narrow_range'])} in every zone",
         "broad minus narrow (4.6)": f"raises every value by {span(t['broad_minus_narrow_range'])}",
+        "D/P share": f"they make up {100 * dp[0]:.0f}–{pct(dp[1])} of large bodies",
         # section 4.2, Table 3 in words
         "largest inner bodies": f"{ib[0]['n_S']} of {ib[0]['n_S'] + ib[0]['n_C']} bodies are \\mbox{{S-like}}, and C-types hold only "
                                 f"{pct(ib[0]['C_frac_mass'])} of the mass",
@@ -295,14 +296,17 @@ def test_the_running_text_quotes_the_summary(what):
     assert phrase in TEX, f"{what}: the paper does not say {phrase!r}"
 
 
-def test_the_dp_share_is_quoted_within_the_precision_the_summary_keeps():
-    """§4.1's D/P share per 0.1 au bin, "13–25%". The summary keeps it to three decimals, which cannot settle a
-    whole percentage on a half: its 0.135 is 17/126 = 0.1349 in the run, so 13%, not the 14% the 0.135 rounds to.
-    Any percentage the three-decimal value allows passes."""
-    m = re.search(r"they make up (\d+)–(\d+)\\% of large bodies", TEX)
-    assert m, "the paper no longer quotes the D/P share"
-    for printed, v in zip(m.groups(), SUMMARY["text_numbers"]["dp_share_per_0.1AU_bin_from_2.9AU"]):
-        assert abs(int(printed) / 100 - v) <= 0.005 + 0.0005, (printed, v)
+def test_no_share_the_paper_prints_as_a_percentage_is_stored_on_a_half_percent():
+    """A stored share on a half percent was itself rounded, so printing it as a whole percentage rounds twice: in
+    v2.6.3, 17/126 = 0.1349 was stored as 0.135 and printed as 14%. Such a share must be stored with more decimals."""
+    t, mc = SUMMARY["text_numbers"], SUMMARY["mass_c_fraction"]["all"]
+    shares = (t["dp_share_per_0.1AU_bin_from_2.9AU"] + t["completeness_H13.5_to_14.5_range"]
+              + list(t["mass_share_of_classified"].values()) + [mc["inner"], mc["middle"]]
+              + [t[k] for k in ("assumed_label_fraction", "measured_share_of_classified_mass", "inner_mass_S_of_S_plus_C",
+                                "derived_diameter_fraction_taxonomy")])
+    for v in shares:
+        halves = round(v * 200, 6)                     # a whole number of half percents
+        assert not (halves.is_integer() and int(halves) % 2 == 1), f"{v} is stored on a half percent"
 
 
 @pytest.mark.parametrize("phrase, value", [

@@ -743,6 +743,14 @@
     "taxonomy_tier_family_fraction": 0.3221,
     "families_with_main_belt_members": 240,
     "families_classifiable": 193,
+    "families_unclassifiable": {
+      "n": 47,
+      "n_members": 1887,
+      "n_D_equiv_ge_10km": 11,
+      "largest": "Toni",
+      "largest_D_equiv_km": 85,
+      "second_largest_D_equiv_km": 47
+    },
     "vesta_family_members": 15252,
     "n_collapsed_size_complete_all_groups": 492,
     "completeness_H13.5_to_14.5_range": [
@@ -790,7 +798,7 @@
     "inner_mass_S_of_all_classified": 0.8912
   },
   "software": {
-    "beltgradient": "2.6.5",
+    "beltgradient": "2.6.6",
     "seed": 4045
   }
 }

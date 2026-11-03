@@ -181,6 +181,7 @@ def test_the_formats_print_as_the_paper_does():
 def _prose() -> dict[str, str]:
     S, t, fam = SUMMARY, SUMMARY["text_numbers"], SUMMARY["families"]
     xs, ext, mc, ib = S["x_split_by_albedo"], S["family_extension_toggled"], S["mass_c_fraction"], S["inner_belt_by_size"]
+    uf = t["families_unclassifiable"]
     raw, debiased = KEYS[0], KEYS[1:]
     a50 = {k: S["crossover"][k]["a50"] for k in KEYS}
     a50_span = span([a50[k] for k in debiased])
@@ -219,6 +220,9 @@ def _prose() -> dict[str, str]:
         "assumed tier": f"({t['n_main_belt_by_label_tier']['assumed']:,} bodies, {pct(t['assumed_label_fraction'])} of the belt)",
         "assumed albedo table": f"{steps[0]} inside {inner_step_edge:.1f}~au; {steps[1]}, {steps[2]} and {steps[3]} beyond it",
         "Vesta family": f"The Vesta family alone contributes over {t['vesta_family_members'] // 1000 * 1000:,} catalogued members",
+        "unclassified families": f"The other {uf['n']} are left out, with their {uf['n_members']:,} members; only "
+                                 f"{uf['n_D_equiv_ge_10km']} of them have $D_{{\\mathrm{{eq}}}} \\geq 10$~km, and only one, "
+                                 f"{uf['largest']} ({uf['largest_D_equiv_km']}~km), is large enough",
         "family members": f"In total, {fam['members_matched_main_belt']:,} main-belt bodies ({100 * fam['family_fraction']:.1f}\\%) are "
                           f"family members, but among bodies with a published taxonomy the fraction is "
                           f"{100 * t['taxonomy_tier_family_fraction']:.1f}\\%",
@@ -270,7 +274,7 @@ def _prose() -> dict[str, str]:
         "middle sin i medians": f"S-like bodies are the more inclined ({ot['middle', 'proper sin i']['median_S']:.3f} versus "
                                 f"{ot['middle', 'proper sin i']['median_C']:.3f})",
         "pristine S-types":f"only {ot['pristine', 'proper e']['n_S']} S-types fall in that zone",
-        "outer inclinations": f"Only the outer-belt inclinations pass it ($p = {p2(ot['outer', 'proper sin i']['KS_p'])}$)",
+        "outer inclinations": f"Only the outer-belt inclinations pass the corrected threshold ($p = {p2(ot['outer', 'proper sin i']['KS_p'])}$)",
         "outer medians": f"($\\Delta = {ot['outer', 'proper sin i']['dmedian_C_minus_S']:.3f}$)",
         "extended orbit test": f"the smallest $p$ is {p2(min(r['KS_p'] for r in ext['orbit_tests_ks']))}, "
                                f"again for the outer-belt inclinations",
@@ -374,6 +378,16 @@ def test_the_family_voter_shares_agree_with_the_family_table():
     for name, shares in fs.items():
         assert abs(sum(shares.values()) - 1) < 1e-3, name
     assert max(fs["Vesta"], key=fs["Vesta"].get) == "S-like" and max(fs["Themis"], key=fs["Themis"].get) == "C-like"
+
+
+def test_the_unclassified_families_are_the_rest_and_only_one_reaches_the_complete_sample():
+    """§3.3: the families that cannot be classified are the other 240 - 193, and only the largest is larger than D_c."""
+    t = SUMMARY["text_numbers"]
+    uf = t["families_unclassifiable"]
+    assert uf["n"] == t["families_with_main_belt_members"] - t["families_classifiable"]
+    d_c = SUMMARY["completeness"]["D_complete_km"]
+    assert uf["largest_D_equiv_km"] >= d_c > uf["second_largest_D_equiv_km"]
+    assert 0 < uf["n_members"] < 0.02 * SUMMARY["families"]["members_matched_main_belt"]
 
 
 def test_only_three_median_differences_exclude_zero_and_the_pristine_ones_only_just():

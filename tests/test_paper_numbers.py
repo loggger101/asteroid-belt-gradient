@@ -277,6 +277,8 @@ def _prose() -> dict[str, str]:
         "K/L albedo": f"their median albedo is {S['albedo_by_group']['K/L']['median_pV']:.2f}, against "
                       f"{S['albedo_by_group']['S-like']['median_pV']:.2f} and {S['albedo_by_group']['C-like']['median_pV']:.2f}, "
                       f"and {pct(S['albedo_by_group']['K/L']['frac_below_0.10'])} of them are darker than 0.10",
+        "D/P albedo": f"(median {S['albedo_by_group']['D/P']['median_pV']:.2f}, with "
+                      f"{pct(S['albedo_by_group']['D/P']['frac_below_0.10'])} of its members darker than 0.10)",
         "X split counts": f"Of the {xs['n_taxonomy_X_group']:,} classified X-complex bodies, {xs['n_split']:,} have a measured albedo",
         "X split P-like": f"and {xs['n_split_by_class']['P']:,} of these are P-like",
         "X split P share": f"lower in the inner belt ({p_share['inner']:.2f}) than beyond it ({span([p_share[z] for z in ZONES[1:]])})",
@@ -307,7 +309,7 @@ def test_no_share_the_paper_prints_as_a_percentage_is_stored_on_a_half_percent()
               + list(t["mass_share_of_classified"].values()) + [mc["inner"], mc["middle"]]
               + [t[k] for k in ("assumed_label_fraction", "measured_share_of_classified_mass", "inner_mass_S_of_S_plus_C",
                                 "derived_diameter_fraction_taxonomy")]
-              + [SUMMARY["albedo_by_group"][g]["frac_below_0.10"] for g in ("S-like", "C-like", "K/L")])
+              + [SUMMARY["albedo_by_group"][g]["frac_below_0.10"] for g in ("S-like", "C-like", "K/L", "D/P")])
     for v in shares:
         halves = round(v * 200, 6)                     # a whole number of half percents
         assert not (halves.is_integer() and int(halves) % 2 == 1), f"{v} is stored on a half percent"

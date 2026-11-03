@@ -80,6 +80,16 @@ def main():
     print(T["dark_zone"].round(3).to_string())
     figure("dark")
 
+    section("Robustness: measured albedo by group", "Bodies with both a published class and a measured albedo.")
+    print(pd.DataFrame(S["albedo_by_group"]).T.astype({"n": int}).to_string())
+    figure("albedo_groups")
+
+    xs = S["x_split_by_albedo"]
+    lo, hi = xs["albedo_cuts_P_M_E"]
+    section("Robustness: X-types split by albedo", f"P below p_V = {lo}, M up to {hi}, E above; P-like X-types join D/P.")
+    print(f"{xs['n_split']:,} of {xs['n_taxonomy_X_group']:,} classified X-types can be split:", xs["n_split_by_class"])
+    print(pd.DataFrame(xs["split_by_zone"]).T.assign(P_share=pd.Series(xs["P_share_of_split_by_zone"])).to_string())
+
     ext = S["family_extension_toggled"]
     section("Robustness: one-step family extension (aggressive upper bound on missed members)")
     print(f"family fraction {S['families']['family_fraction']:.3f} -> {ext['family_fraction']:.3f}")

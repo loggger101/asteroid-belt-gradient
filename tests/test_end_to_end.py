@@ -272,7 +272,7 @@ def test_the_walkthrough_runs(result, monkeypatch, capsys):
     walk.main()
     out = capsys.readouterr().out
     for title in ["Label provenance", "Collisional families", "S/C crossover", "Orbital excitation",
-                  "one-step family extension"]:
+                  "albedo by group", "X-types split by albedo", "one-step family extension"]:
         assert title in out, title
 
 

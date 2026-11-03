@@ -461,9 +461,6 @@ def sample_flow(summary: dict, keys: list[str]):
     return fig
 
 
-ALBEDO_GROUPS = ["S-like", "C-like", "D/P", "X"]
-
-
 def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
     """Measured geometric albedo of the bodies with a published taxonomy, by group (normalised histograms)."""
     t = mb[mb.tier.eq("taxonomy") & mb.albedo.notna()]
@@ -473,7 +470,7 @@ def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
         raise ValueError(f"albedo figure: {len(out)} measured albedos outside [{bins[0]}, {bins[-1]}]: "
                          f"{out.albedo.head(5).tolist()}")
     fig, ax = _fig(COL_W, 2.0)
-    for g in ALBEDO_GROUPS:
+    for g in GROUP_ORDER:
         a = t.loc[t.group.eq(g), "albedo"]
         ax.hist(a, bins=bins, density=True, histtype="step", lw=1.0, color=COLORS[g], label=_math(f"{g} (n = {len(a):,})"))
     ax.axvline(cuts[0], color=INK2, lw=.7)
@@ -489,5 +486,5 @@ def albedo_by_group(mb: pd.DataFrame, cuts: tuple[float, float]):
     ax.set_yticks([])
     ax.spines["left"].set_visible(False)
     # below the plot: inside, the 0.30 line crossed the legend
-    fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=2, handlelength=1.2)
+    fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=3, handlelength=1.2)
     return fig

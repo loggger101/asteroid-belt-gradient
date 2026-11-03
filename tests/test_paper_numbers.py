@@ -192,6 +192,7 @@ def _prose() -> dict[str, str]:
     top4, ipw_inner = t["mass_share_of_classified"], t["innermost_c_fraction_ipw"]
     n_lo, n_hi = sorted(t["innermost_n_S_plus_C_size_complete_2.1-2.3"].values())
     big, second = t["flora_family_two_largest"]
+    fs = t["family_voter_group_shares"]
     dark = [S["dark_fraction_complete"][z] for z in ZONES]
     no4 = [mc["no_big4"][z] for z in ZONES]
     p_share = xs["P_share_of_split_by_zone"]
@@ -256,6 +257,8 @@ def _prose() -> dict[str, str]:
         "debiased crossover": f"move it inward to {a50_span}~au, {sl - max(a50[k] for k in debiased):.1f}–"
                               f"{sl - min(a50[k] for k in debiased):.1f}~au inside the snow line",
         "transition width": f"the 10–90\\% width of the transition is {width_span}~au",
+        "transition width, lower ends": "the lower ends of the intervals ("
+                                        + span([S["crossover"][k]["width_lo"] for k in debiased]) + "~au)",
         "inward move (5.1)": f"the crossover moves inward by about {a50[raw] - a50[KEYS[1]]:.1f}~au",
         "IPW and complete crossovers (5.5)": f"({a50[KEYS[2]]:.2f} versus {a50[KEYS[1]]:.2f}~au)",
         # section 4.5
@@ -264,7 +267,9 @@ def _prose() -> dict[str, str]:
         "pristine e medians": f"({ot['pristine', 'proper e']['median_C']:.3f} versus {ot['pristine', 'proper e']['median_S']:.3f})",
         "pristine sin i medians": f"($\\sin i_{{\\mathrm{{P}}}}$ {ot['pristine', 'proper sin i']['median_C']:.3f} versus "
                                   f"{ot['pristine', 'proper sin i']['median_S']:.3f})",
-        "pristine S-types": f"only {ot['pristine', 'proper e']['n_S']} S-types fall in that zone",
+        "middle sin i medians": f"S-like bodies are the more inclined ({ot['middle', 'proper sin i']['median_S']:.3f} versus "
+                                f"{ot['middle', 'proper sin i']['median_C']:.3f})",
+        "pristine S-types":f"only {ot['pristine', 'proper e']['n_S']} S-types fall in that zone",
         "outer inclinations": f"Only the outer-belt inclinations pass it ($p = {p2(ot['outer', 'proper sin i']['KS_p'])}$)",
         "outer medians": f"($\\Delta = {ot['outer', 'proper sin i']['dmedian_C_minus_S']:.3f}$)",
         "extended orbit test": f"the smallest $p$ is {p2(min(r['KS_p'] for r in ext['orbit_tests_ks']))}, "
@@ -274,6 +279,11 @@ def _prose() -> dict[str, str]:
         "albedo complete limit": f"gives a complete sample for $D \\geq {S['completeness']['D_complete_albedo_km']:.0f}$~km",
         "dark C and S": f"{pct(S['albedo_by_group']['C-like']['frac_below_0.10'])} of the C-like and "
                         f"{pct(S['albedo_by_group']['S-like']['frac_below_0.10'])} of the S-like bodies are darker than 0.10",
+        "K/L albedo": f"their median albedo is {S['albedo_by_group']['K/L']['median_pV']:.2f}, against "
+                      f"{S['albedo_by_group']['S-like']['median_pV']:.2f} and {S['albedo_by_group']['C-like']['median_pV']:.2f}, "
+                      f"and {pct(S['albedo_by_group']['K/L']['frac_below_0.10'])} of them are darker than 0.10",
+        "D/P albedo": f"(median {S['albedo_by_group']['D/P']['median_pV']:.2f}, with "
+                      f"{pct(S['albedo_by_group']['D/P']['frac_below_0.10'])} of its members darker than 0.10)",
         "X split counts": f"Of the {xs['n_taxonomy_X_group']:,} classified X-complex bodies, {xs['n_split']:,} have a measured albedo",
         "X split P-like": f"and {xs['n_split_by_class']['P']:,} of these are P-like",
         "X split P share": f"lower in the inner belt ({p_share['inner']:.2f}) than beyond it ({span([p_share[z] for z in ZONES[1:]])})",
@@ -283,6 +293,10 @@ def _prose() -> dict[str, str]:
         "middle belt (5.2)": f"raise its middle-belt C-fraction from {zone_f(raw, 'middle'):.2f} to {deb('middle')}",
         "Eos": f"here Eos is classified as {t['eos_family']['fam_group']} by plurality "
                f"({t['eos_family']['purity']:.2f} of its classified members)",
+        "Eos K/L and C": f"only {fs['Eos']['K/L']:.2f} of them are K/L, fewer than the {fs['Eos']['C-like']:.2f} that are C-like",
+        "Vesta and Themis": f"{pct(fs['Vesta']['C-like'])} of the classified members of the basaltic Vesta family are C-like, "
+                            f"and {pct(fs['Themis']['S-like'])} of those of the C-type Themis family are S-like",
+        "inner C range (5.5)": f"the inner-belt C-fractions of {deb('inner')} found here",
         "derived diameters": f"Of the classified bodies, {pct(t['derived_diameter_fraction_taxonomy'])} have diameters",
         "Flora": f"(9) {big['name']}, an \\mbox{{{big['spectral_type']}-type}} body larger than the {second['spectral_type']}-type "
                  f"(8) {second['name']} itself",
@@ -303,7 +317,9 @@ def test_no_share_the_paper_prints_as_a_percentage_is_stored_on_a_half_percent()
     shares = (t["dp_share_per_0.1AU_bin_from_2.9AU"] + t["completeness_H13.5_to_14.5_range"]
               + list(t["mass_share_of_classified"].values()) + [mc["inner"], mc["middle"]]
               + [t[k] for k in ("assumed_label_fraction", "measured_share_of_classified_mass", "inner_mass_S_of_S_plus_C",
-                                "derived_diameter_fraction_taxonomy")])
+                                "derived_diameter_fraction_taxonomy")]
+              + [SUMMARY["albedo_by_group"][g]["frac_below_0.10"] for g in ("S-like", "C-like", "K/L", "D/P")]
+              + [t["family_voter_group_shares"]["Vesta"]["C-like"], t["family_voter_group_shares"]["Themis"]["S-like"]])
     for v in shares:
         halves = round(v * 200, 6)                     # a whole number of half percents
         assert not (halves.is_integer() and int(halves) % 2 == 1), f"{v} is stored on a half percent"
@@ -343,8 +359,33 @@ def test_every_debiased_transition_is_wider_than_the_belt_and_reaches_10_and_90_
         x = SUMMARY["crossover"][k]
         a10, a90 = x["a50"] - x["width_10_90"] / 2, x["a50"] + x["width_10_90"] / 2
         assert x["width_10_90"] > A_MAX - A_MIN, k
+        assert x["width_lo"] > A_MAX - A_MIN - 0.05, f"{k}: the interval's lower end is not about the belt's span or more"
         assert a10 < A_MIN, f"{k}: the fit falls to 10% inside the belt, at a = {a10:.2f} au"
         assert A_MAX - 0.2 < a90 < A_MAX, f"{k}: the fit reaches 90% at a = {a90:.2f} au"
+
+
+def test_the_family_voter_shares_agree_with_the_family_table():
+    """§5.5 quotes the voting members' groups for Eos, Vesta and Themis; they are the same members that set Eos's
+    class and its purity."""
+    t = SUMMARY["text_numbers"]
+    fs, eos = t["family_voter_group_shares"], t["eos_family"]
+    assert round(fs["Eos"][eos["fam_group"]], 2) == eos["purity"]
+    assert max(fs["Eos"], key=fs["Eos"].get) == eos["fam_group"]
+    for name, shares in fs.items():
+        assert abs(sum(shares.values()) - 1) < 1e-3, name
+    assert max(fs["Vesta"], key=fs["Vesta"].get) == "S-like" and max(fs["Themis"], key=fs["Themis"].get) == "C-like"
+
+
+def test_only_three_median_differences_exclude_zero_and_the_pristine_ones_only_just():
+    """§4.5: the pristine-zone intervals "only just exclude zero"; the middle-belt inclination interval "also excludes
+    zero", with S-like bodies the more inclined; no other interval of Table 5 does."""
+    ot = {(r["zone"], r["element"]): r for r in SUMMARY["orbit_tests"]}
+    excluding = {k for k, r in ot.items() if r["ci95_lo"] > 0 or r["ci95_hi"] < 0}
+    assert excluding == {("pristine", "proper e"), ("pristine", "proper sin i"), ("middle", "proper sin i")}
+    for el in ("proper e", "proper sin i"):
+        assert 0 < ot["pristine", el]["ci95_lo"] < 0.005, el
+    mid = ot["middle", "proper sin i"]
+    assert mid["ci95_hi"] < 0 and mid["median_S"] > mid["median_C"]
 
 
 def test_the_debiased_crossovers_agree_within_their_intervals():

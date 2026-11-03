@@ -135,11 +135,18 @@ def text_numbers(mb, ftab, comp, samples, keys, t_mass, zt_narrow, zt_broad) -> 
     # families the Limitations section names
     eos = ftab.loc[_family(ftab, "Eos")]
     flora_top2 = mb[mb.fam_id.eq(_family(ftab, "Flora"))].nlargest(2, "diameter_km")
+    # the groups of the members that vote on a family's class (taxonomy, not X): how mixed one parent's labels are
+    voting = sorted(g for g in GROUP_ORDER if g != "X")                 # every group, so a missing one reads 0
+    voters = mb[mb.in_family & mb.tier.eq("taxonomy") & mb.group.isin(voting)]
+    fam_shares = {name: {g: _round(v) for g, v in voters[voters.fam_id.eq(_family(ftab, name))].group
+                         .value_counts(normalize=True).reindex(voting, fill_value=0.0).items()}
+                  for name in ("Eos", "Vesta", "Themis")}
     return {
         "n_main_belt_by_label_tier": {k: int(v) for k, v in mb.tier.value_counts().items()},
         "assumed_tier_albedo_by_a": {f"{p:.3f}": {"a_min": round(float(r["min"]), 3), "a_max": round(float(r["max"]), 3), "n": int(r["size"])}
                                      for p, r in asm.iterrows()},
         "eos_family": {"fam_group": eos.fam_group, "purity": round(float(eos.purity), 2), "n_labelled": int(eos.n_labelled)},
+        "family_voter_group_shares": fam_shares,
         "flora_family_two_largest": [{"name": r["name"], "spectral_type": r.spectral_type, "diameter_km": round(float(r.diameter_km), 1)}
                                      for _, r in flora_top2.iterrows()],
         "assumed_label_fraction": round(float(mb.tier.eq("assumed").mean()), 4),

@@ -21,7 +21,7 @@ from scipy import stats
 from .albedo import DARK_ALBEDO, dark_curve
 from .config import (A_MAX, A_MIN, BIN_W, COLORS, COMPLETE_FRAC, D_IPW, D_ORBIT, H_IPW_MAX, KIRKWOOD, SNOW_LINE_AU,
                      ZONE_NAMES)
-from .gradient import MIN_CELL, c_fraction_curve, mass_by_zone, sample_keys, size_distance_grid
+from .gradient import MIN_CELL, c_fraction_curve, logistic_curve, mass_by_zone, sample_keys, size_distance_grid
 from .orbits import ELEMENTS, MIN_PER_CLASS, split_by_class
 
 COL_W, FULL_W = 3.3125, 7.0208      # inches: the paper's column and text widths
@@ -255,8 +255,7 @@ def crossover_fits(xo: pd.DataFrame, d_c: float):
         ax_.axvspan(A_MIN, A_MAX, color=BAND, lw=0, zorder=0)
         ax_.axvline(SNOW_LINE_AU, color=SNOW, lw=.8, ls="--", zorder=1)
     for i, (k, row) in enumerate(xo.iterrows()):
-        b1 = 4.394 / float(row.width_10_90)
-        p = 1 / (1 + np.exp(-b1 * (x - float(row.a50))))
+        p = logistic_curve(x, float(row.a50), float(row.width_10_90))
         c, lw = SAMPLE_COLORS[i], (1.0 if i == 0 else 1.3)
         ax.plot(x[inb], p[inb], color=c, lw=lw, ls=(0, (3.5, 1.8)) if i == 0 else "-", label=labels[i], zorder=3)
         for part in (x < A_MIN, x > A_MAX):

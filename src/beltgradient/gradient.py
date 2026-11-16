@@ -144,7 +144,15 @@ def zone_table(samples: dict[str, pd.DataFrame], rng: np.random.Generator, which
 
 # ── S/C crossover ───────────────────────────────────────────────────────────
 # P(C | a) = 1 / (1 + exp(-(b0 + b1 (a - 2.7)))), weighted maximum likelihood.
-# a50 = 2.7 - b0/b1; 10->90% width = 2 ln 9 / b1 = 4.394 / b1.
+# a50 = 2.7 - b0/b1; 10->90% width = 2 ln 9 / b1.
+
+LOGIT_10_90 = 2 * np.log(9)     # logit(0.9) - logit(0.1) = 4.39445...
+
+
+def logistic_curve(a, a50: float, width_10_90: float):
+    """P(C | a) of a fit given by its crossover and 10-90% width: 10% and 90% half a width either side of ``a50``."""
+    return 1 / (1 + np.exp(-LOGIT_10_90 / width_10_90 * (np.asarray(a, dtype=float) - a50)))
+
 
 def fit_logistic(a, y, w):
     x = a - 2.7
@@ -170,9 +178,9 @@ def crossover(s: pd.DataFrame, rng: np.random.Generator, n_boot: int = 200) -> d
     a, y, w = s.semi_major_axis_au.values, s.group.eq("C-like").values.astype(float), s.w.values
     b = fit_logistic(a, y, w)
     bs = np.array([fit_logistic(a, y, w * rng.poisson(1.0, len(w))) for _ in range(n_boot)])
-    a50 = 2.7 - bs[:, 0] / bs[:, 1]; width = 4.394 / bs[:, 1]
+    a50 = 2.7 - bs[:, 0] / bs[:, 1]; width = LOGIT_10_90 / bs[:, 1]
     return dict(a50=2.7 - b[0] / b[1], a50_lo=np.percentile(a50, 16), a50_hi=np.percentile(a50, 84),
-                width_10_90=4.394 / b[1], width_lo=np.percentile(width, 16), width_hi=np.percentile(width, 84), n=len(s))
+                width_10_90=LOGIT_10_90 / b[1], width_lo=np.percentile(width, 16), width_hi=np.percentile(width, 84), n=len(s))
 
 
 def crossover_table(samples: dict[str, pd.DataFrame], rng: np.random.Generator, n_boot: int = 200) -> pd.DataFrame:

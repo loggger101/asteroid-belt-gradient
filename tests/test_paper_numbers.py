@@ -219,7 +219,7 @@ def _prose() -> dict[str, str]:
         # section 3
         "assumed tier": f"({t['n_main_belt_by_label_tier']['assumed']:,} bodies, {pct(t['assumed_label_fraction'])} of the belt)",
         "assumed albedo table": f"{steps[0]} inside {inner_step_edge:.1f}~au; {steps[1]}, {steps[2]} and {steps[3]} beyond it",
-        "Vesta family": f"The Vesta family alone contributes over {t['vesta_family_members'] // 1000 * 1000:,} catalogued members",
+        "Vesta family": f"The Vesta family alone contributes over {t['vesta_family_members'] // 1000 * 1000:,} cataloged members",
         "unclassified families": f"The other {uf['n']} are left out, with their {uf['n_members']:,} members; only "
                                  f"{uf['n_D_equiv_ge_10km']} of them have $D_{{\\mathrm{{eq}}}} \\geq 10$~km, and only one, "
                                  f"{uf['largest']} ({uf['largest_D_equiv_km']}~km), is large enough",

@@ -48,6 +48,7 @@ SOURCE_DEFECTS = [
      "without its backslash"),
     ("em dash", lambda t, b: (plant(t, INTRO, "a---b. " + INTRO), b), "em dash"),
     ("British spelling", lambda t, b: (plant(t, "analyzed", "analysed"), b), "British spelling"),
+    ("British spelling of cataloged", lambda t, b: (plant(t, "cataloged members", "catalogued members"), b), "British spelling"),
     ("first person", lambda t, b: (plant(t, INTRO, "We note this. " + INTRO), b), "first-person"),
     ("citation in a heading", lambda t, b: (plant(t, "\\subsection{Five scenarios}",
                                                   "\\subsection{Five scenarios of \\citet{walsh2011}}"), b), "citation in a heading"),

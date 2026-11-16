@@ -11,7 +11,8 @@ from beltgradient.config import H_EDGES, SNOW_LINE_AU, ZONE_NAMES
 from beltgradient.families import (V1AU, extend_families, family_table, load_families, load_proper_elements,
                                    zappala_distance, zappala_embedding)
 from beltgradient.fetch import download
-from beltgradient.gradient import c_fraction_curve, collapsed, fit_logistic, size_distance_grid, zone_point
+from beltgradient import gradient
+from beltgradient.gradient import c_fraction_curve, collapsed, crossover, fit_logistic, size_distance_grid, zone_point
 from beltgradient.orbits import ks_only, orbit_tests
 
 
@@ -133,7 +134,25 @@ def test_logistic_recovers_crossover():
     y = (rng.random(a.size) < 1 / (1 + np.exp(-(b0 + b1 * (a - 2.7))))).astype(float)
     b = fit_logistic(a, y, np.ones_like(a))
     assert 2.7 - b[0] / b[1] == pytest.approx(3.0, abs=0.02)
-    assert 4.394 / b[1] == pytest.approx(4.394 / 4.0, rel=0.1)
+    assert b[1] == pytest.approx(4.0, rel=0.1)
+
+
+def test_the_transition_width_is_exactly_two_ln_nine_over_the_slope():
+    """The paper defines the 10-90% width as 2 ln 9 / beta_1 (2 ln 9 = 4.39445; a rounded 4.394 is 1e-4 short)."""
+    rng = np.random.default_rng(1)
+    a = rng.uniform(2.1, 3.3, 4_000)
+    y = rng.random(a.size) < 1 / (1 + np.exp(-(0.4 + 3.0 * (a - 2.7))))
+    s = pd.DataFrame({"semi_major_axis_au": a, "group": np.where(y, "C-like", "S-like"), "w": 1.0})
+    b = fit_logistic(a, y.astype(float), np.ones_like(a))
+    r = crossover(s, np.random.default_rng(2), n_boot=3)
+    assert r["width_10_90"] == pytest.approx(2 * np.log(9) / b[1], rel=1e-12)
+
+
+def test_the_curve_drawn_from_a_fit_passes_through_10_50_and_90_percent():
+    """Figure 8 draws each fit from (a50, width): the curve must reach 10% and 90% exactly half a width either side."""
+    a50, width = 2.46, 1.39
+    p = gradient.logistic_curve(np.array([a50 - width / 2, a50, a50 + width / 2]), a50, width)
+    assert p == pytest.approx([0.1, 0.5, 0.9], abs=1e-12)
 
 
 def test_c_fraction_is_weighted_and_ignores_x():

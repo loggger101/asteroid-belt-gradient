@@ -402,6 +402,15 @@ def test_only_three_median_differences_exclude_zero_and_the_pristine_ones_only_j
     assert mid["ci95_hi"] < 0 and mid["median_S"] > mid["median_C"]
 
 
+def test_the_dark_fraction_lies_as_close_to_the_debiased_taxonomic_fractions_as_the_text_says():
+    """§4.6: the albedo-only dark fraction is "within 0.1 of the debiased taxonomic fractions of Table 2 in every zone"."""
+    m = re.search(r"within (\d\.\d+) of the debiased taxonomic fractions of Table~\\ref\{tab:2\} in every zone", TEX)
+    assert m, "the paper no longer says how close the dark fraction is to the debiased taxonomic fractions"
+    gaps = {(k, z): abs(SUMMARY["dark_fraction_complete"][z] - zone_f(k, z)) for k in KEYS[1:] for z in ZONES}
+    worst = max(gaps, key=gaps.get)
+    assert gaps[worst] < float(m.group(1)), f"the dark fraction is {gaps[worst]:.3f} from the {worst} fraction"
+
+
 def test_the_debiased_crossovers_agree_within_their_intervals():
     xs = [SUMMARY["crossover"][k] for k in KEYS[1:]]
     assert max(x["a50_lo"] for x in xs) <= min(x["a50_hi"] for x in xs)

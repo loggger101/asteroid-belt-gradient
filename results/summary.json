@@ -121,36 +121,36 @@
       "a50": 2.8407,
       "a50_lo": 2.8378,
       "a50_hi": 2.8431,
-      "width_10_90": 1.7168,
-      "width_lo": 1.7031,
-      "width_hi": 1.7306,
+      "width_10_90": 1.7169,
+      "width_lo": 1.7033,
+      "width_hi": 1.7308,
       "n": 135381.0
     },
     "collapsed, IPW, D\u226510 km": {
       "a50": 2.4603,
       "a50_lo": 2.4338,
       "a50_hi": 2.4852,
-      "width_10_90": 1.3937,
-      "width_lo": 1.3187,
-      "width_hi": 1.4785,
+      "width_10_90": 1.3939,
+      "width_lo": 1.3189,
+      "width_hi": 1.4787,
       "n": 2264.0
     },
     "collapsed, D\u226553 km": {
       "a50": 2.4724,
       "a50_lo": 2.3856,
       "a50_hi": 2.5298,
-      "width_10_90": 1.3763,
-      "width_lo": 1.178,
-      "width_hi": 1.664,
+      "width_10_90": 1.3765,
+      "width_lo": 1.1781,
+      "width_hi": 1.6642,
       "n": 330.0
     },
     "background, D\u226553 km": {
       "a50": 2.4068,
       "a50_lo": 2.306,
       "a50_hi": 2.4876,
-      "width_10_90": 1.4859,
-      "width_lo": 1.2134,
-      "width_hi": 1.8334,
+      "width_10_90": 1.4861,
+      "width_lo": 1.2135,
+      "width_hi": 1.8336,
       "n": 247.0
     }
   },
@@ -798,7 +798,7 @@
     "inner_mass_S_of_all_classified": 0.8912
   },
   "software": {
-    "beltgradient": "2.6.6",
+    "beltgradient": "2.6.7",
     "seed": 4045
   }
 }

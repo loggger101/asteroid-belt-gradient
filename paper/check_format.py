@@ -23,7 +23,8 @@ sys.stdout.reconfigure(encoding="utf-8")
 HERE = Path(__file__).resolve().parent
 PAPER = HERE   # the folder with main.tex and refs.bib; main() takes it from --paper
 UNITS = r"(?:au|km|Myr|Gyr|K|mag|kg)"
-BRITISH = r"\b(?:analysed|analysing|labelled|labelling|colours?|behaviours?|centres?|normalis\w*|favour\w*|modelled|modelling)\b"
+# "catalogued", not "Catalogue": the MP3C's own name keeps its spelling
+BRITISH = r"\b(?:analysed|analysing|labelled|labelling|colours?|behaviours?|centres?|normalis\w*|favour\w*|modelled|modelling|catalogued|cataloguing)\b"
 FIRST_PERSON = r"\b(?:I|me|my|we|us|our|We|Our|My)\b"
 GROUPS_ITALIC = {"X"}   # \textit{X} is the X group's name, not a variable
 

@@ -16,7 +16,7 @@ When the analysis changes, cut a new release of the code and cite it: the versio
 in Data availability and in the `edwards2026a` entry of `refs.bib`, and must equal `__version__`.
 
 This folder is AASTeX 7.0.1 (`aastex701.cls`, `aasjournalv7.bst` from CTAN, included): two-column AAS layout,
-natbib author-year citations, `refs.bib` (86 entries with DOIs), floating figures, `deluxetable` tables,
+natbib author-year citations, `refs.bib` (90 entries, 85 with DOIs), floating figures, `deluxetable` tables,
 appendix figure A1. The paper uses `aasjournalv7tie.bst`, a renamed copy of `aasjournalv7.bst` with one
 change (its header says which): in-text citations tie the initials to the surname, so "D. Nesvorný" is
 never split across two lines. The original is kept, unchanged.
